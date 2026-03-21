@@ -32,7 +32,9 @@ const uploadSchema = new mongoose.Schema(
     },
     ingestionMetadata: {
         processingTimeMs: Number,
-        n8nWorkflowId: String
+        n8nWorkflowId: String,
+        driveFileId: String,       // Google Drive file ID for deletion
+        driveFileName: String      // Original name in Drive
     },
     errorDetails: {
       message: String,

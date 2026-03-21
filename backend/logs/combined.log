@@ -269,3 +269,85 @@
 {"contextSize":5,"level":"info","message":"n8n chat request successful","messageLength":19,"processingTime":3520,"service":"deep-research-backend","timestamp":"2026-03-21 13:57:54"}
 {"chatId":"69be568a62b45ac089a1edb8","level":"info","message":"Chat message processed","processingTime":3541,"service":"deep-research-backend","timestamp":"2026-03-21 13:57:54","userId":"69be274d3713d902de8bc310"}
 {"level":"info","message":"\u001b[0mPOST /api/chat \u001b[32m200\u001b[0m 3568.871 ms - 330\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-21 13:57:54"}
+{"level":"info","message":"Environment variables successfully validated","service":"deep-research-backend","timestamp":"2026-03-21 14:10:04"}
+{"level":"info","message":"🚀 Backend Server running on port 5000 in development mode","service":"deep-research-backend","timestamp":"2026-03-21 14:10:07"}
+{"level":"info","message":"📚 API Documentation: http://localhost:5000","service":"deep-research-backend","timestamp":"2026-03-21 14:10:07"}
+{"level":"info","message":"🏥 Health Check: http://localhost:5000/health","service":"deep-research-backend","timestamp":"2026-03-21 14:10:07"}
+{"level":"info","message":"Environment variables successfully validated","service":"deep-research-backend","timestamp":"2026-03-21 14:10:12"}
+{"level":"info","message":"🚀 Backend Server running on port 5000 in development mode","service":"deep-research-backend","timestamp":"2026-03-21 14:10:15"}
+{"level":"info","message":"📚 API Documentation: http://localhost:5000","service":"deep-research-backend","timestamp":"2026-03-21 14:10:15"}
+{"level":"info","message":"🏥 Health Check: http://localhost:5000/health","service":"deep-research-backend","timestamp":"2026-03-21 14:10:15"}
+{"level":"info","message":"Environment variables successfully validated","service":"deep-research-backend","timestamp":"2026-03-21 14:11:13"}
+{"level":"info","message":"🚀 Backend Server running on port 5000 in development mode","service":"deep-research-backend","timestamp":"2026-03-21 14:11:16"}
+{"level":"info","message":"📚 API Documentation: http://localhost:5000","service":"deep-research-backend","timestamp":"2026-03-21 14:11:16"}
+{"level":"info","message":"🏥 Health Check: http://localhost:5000/health","service":"deep-research-backend","timestamp":"2026-03-21 14:11:16"}
+{"filename":"EIOT-lab-manual.pdf","level":"info","message":"Upload processing started","service":"deep-research-backend","timestamp":"2026-03-21 14:11:19","uploadId":"69be59afa60586a44ac4134e","userId":"69be274d3713d902de8bc310"}
+{"contentType":"multipart/form-data; boundary=--------------------------46892d68ef10f0797c2e013f","filename":"EIOT-lab-manual.pdf","level":"info","message":"Sending file to n8n upload webhook","service":"deep-research-backend","size":3459922,"timestamp":"2026-03-21 14:11:19","webhook":"http://localhost:5678/webhook/upload"}
+{"fileSize":3459922,"filename":"EIOT-lab-manual.pdf","level":"info","message":"n8n file upload successful","processingTime":15309,"service":"deep-research-backend","timestamp":"2026-03-21 14:11:34"}
+{"level":"info","message":"Upload completed successfully","processingTime":15341,"service":"deep-research-backend","timestamp":"2026-03-21 14:11:34","uploadId":"69be59afa60586a44ac4134e"}
+{"level":"info","message":"\u001b[0mPOST /api/v1/uploads \u001b[32m200\u001b[0m 15476.250 ms - 193\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-21 14:11:34"}
+{"contextSize":5,"level":"info","message":"n8n chat request successful","messageLength":20,"processingTime":846,"service":"deep-research-backend","timestamp":"2026-03-21 14:13:04"}
+{"chatId":"69be5a18a60586a44ac41353","level":"info","message":"Chat message processed","processingTime":861,"service":"deep-research-backend","timestamp":"2026-03-21 14:13:04","userId":"69be274d3713d902de8bc310"}
+{"level":"info","message":"\u001b[0mPOST /api/chat \u001b[32m200\u001b[0m 908.456 ms - 328\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-21 14:13:04"}
+{"level":"info","message":"Environment variables successfully validated","service":"deep-research-backend","timestamp":"2026-03-21 14:21:19"}
+{"level":"info","message":"🚀 Backend Server running on port 5000 in development mode","service":"deep-research-backend","timestamp":"2026-03-21 14:21:22"}
+{"level":"info","message":"📚 API Documentation: http://localhost:5000","service":"deep-research-backend","timestamp":"2026-03-21 14:21:22"}
+{"level":"info","message":"🏥 Health Check: http://localhost:5000/health","service":"deep-research-backend","timestamp":"2026-03-21 14:21:22"}
+{"contextSize":5,"level":"info","message":"n8n chat request successful","messageLength":5,"processingTime":854,"service":"deep-research-backend","timestamp":"2026-03-21 14:21:26"}
+{"chatId":"69be5c0edff1c7b54f68e39a","level":"info","message":"Chat message processed","processingTime":904,"service":"deep-research-backend","timestamp":"2026-03-21 14:21:26","userId":"69be274d3713d902de8bc310"}
+{"level":"info","message":"\u001b[0mPOST /api/chat \u001b[32m200\u001b[0m 985.933 ms - 344\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-21 14:21:26"}
+{"contextSize":5,"level":"info","message":"n8n chat request successful","messageLength":22,"processingTime":849,"service":"deep-research-backend","timestamp":"2026-03-21 14:22:01"}
+{"chatId":"69be5c31dff1c7b54f68e39e","level":"info","message":"Chat message processed","processingTime":872,"service":"deep-research-backend","timestamp":"2026-03-21 14:22:01","userId":"69be274d3713d902de8bc310"}
+{"level":"info","message":"\u001b[0mPOST /api/chat \u001b[32m200\u001b[0m 889.610 ms - 841\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-21 14:22:01"}
+{"contextSize":5,"level":"info","message":"n8n chat request successful","messageLength":12,"processingTime":1112,"service":"deep-research-backend","timestamp":"2026-03-21 14:22:31"}
+{"chatId":"69be5c4fdff1c7b54f68e3a2","level":"info","message":"Chat message processed","processingTime":1121,"service":"deep-research-backend","timestamp":"2026-03-21 14:22:31","userId":"69be274d3713d902de8bc310"}
+{"level":"info","message":"\u001b[0mPOST /api/chat \u001b[32m200\u001b[0m 1128.487 ms - 1117\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-21 14:22:31"}
+{"contextSize":5,"level":"info","message":"n8n chat request successful","messageLength":18,"processingTime":4529,"service":"deep-research-backend","timestamp":"2026-03-21 14:23:04"}
+{"chatId":"69be5c70dff1c7b54f68e3a6","level":"info","message":"Chat message processed","processingTime":4543,"service":"deep-research-backend","timestamp":"2026-03-21 14:23:04","userId":"69be274d3713d902de8bc310"}
+{"level":"info","message":"\u001b[0mPOST /api/chat \u001b[32m200\u001b[0m 4547.394 ms - 663\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-21 14:23:04"}
+{"filename":"UX-V1.pdf","level":"info","message":"Upload processing started","service":"deep-research-backend","timestamp":"2026-03-21 14:25:45","uploadId":"69be5d11dff1c7b54f68e3a9","userId":"69be274d3713d902de8bc310"}
+{"contentType":"multipart/form-data; boundary=--------------------------199f62baf6f0026dabb694e2","filename":"UX-V1.pdf","level":"info","message":"Sending file to n8n upload webhook","service":"deep-research-backend","size":2230311,"timestamp":"2026-03-21 14:25:45","webhook":"http://localhost:5678/webhook/upload"}
+{"fileSize":2230311,"filename":"UX-V1.pdf","level":"info","message":"n8n file upload successful","processingTime":17409,"service":"deep-research-backend","timestamp":"2026-03-21 14:26:02"}
+{"level":"info","message":"Upload completed successfully","processingTime":17420,"service":"deep-research-backend","timestamp":"2026-03-21 14:26:02","uploadId":"69be5d11dff1c7b54f68e3a9"}
+{"level":"info","message":"\u001b[0mPOST /api/v1/uploads \u001b[32m200\u001b[0m 17503.372 ms - 183\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-21 14:26:02"}
+{"contextSize":5,"level":"info","message":"n8n chat request successful","messageLength":14,"processingTime":1225,"service":"deep-research-backend","timestamp":"2026-03-21 14:26:15"}
+{"chatId":"69be5d2fdff1c7b54f68e3ae","level":"info","message":"Chat message processed","processingTime":1234,"service":"deep-research-backend","timestamp":"2026-03-21 14:26:15","userId":"69be274d3713d902de8bc310"}
+{"level":"info","message":"\u001b[0mPOST /api/chat \u001b[32m200\u001b[0m 1239.527 ms - 1332\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-21 14:26:15"}
+{"contextSize":5,"level":"info","message":"n8n chat request successful","messageLength":28,"processingTime":3644,"service":"deep-research-backend","timestamp":"2026-03-21 14:36:44"}
+{"chatId":"69be5fa4dff1c7b54f68e3b2","level":"info","message":"Chat message processed","processingTime":3652,"service":"deep-research-backend","timestamp":"2026-03-21 14:36:45","userId":"69be274d3713d902de8bc310"}
+{"level":"info","message":"\u001b[0mPOST /api/chat \u001b[32m200\u001b[0m 3657.446 ms - 1217\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-21 14:36:45"}
+{"contextSize":5,"level":"info","message":"n8n chat request successful","messageLength":48,"processingTime":3372,"service":"deep-research-backend","timestamp":"2026-03-21 14:44:44"}
+{"chatId":"69be6184dff1c7b54f68e3b6","level":"info","message":"Chat message processed","processingTime":3385,"service":"deep-research-backend","timestamp":"2026-03-21 14:44:44","userId":"69be274d3713d902de8bc310"}
+{"level":"info","message":"\u001b[0mPOST /api/chat \u001b[32m200\u001b[0m 3390.842 ms - 331\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-21 14:44:44"}
+{"filename":"Trip to keralam.pdf","level":"info","message":"Upload processing started","service":"deep-research-backend","timestamp":"2026-03-21 14:45:09","uploadId":"69be619ddff1c7b54f68e3b9","userId":"69be274d3713d902de8bc310"}
+{"contentType":"multipart/form-data; boundary=--------------------------b135229dd54f6b364355ab23","filename":"Trip to keralam.pdf","level":"info","message":"Sending file to n8n upload webhook","service":"deep-research-backend","size":309267,"timestamp":"2026-03-21 14:45:09","webhook":"http://localhost:5678/webhook/upload"}
+{"fileSize":309267,"filename":"Trip to keralam.pdf","level":"info","message":"n8n file upload successful","processingTime":9567,"service":"deep-research-backend","timestamp":"2026-03-21 14:45:18"}
+{"level":"info","message":"Upload completed successfully","processingTime":9575,"service":"deep-research-backend","timestamp":"2026-03-21 14:45:18","uploadId":"69be619ddff1c7b54f68e3b9"}
+{"level":"info","message":"\u001b[0mPOST /api/v1/uploads \u001b[32m200\u001b[0m 9589.237 ms - 192\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-21 14:45:18"}
+{"contextSize":5,"level":"info","message":"n8n chat request successful","messageLength":14,"processingTime":1007,"service":"deep-research-backend","timestamp":"2026-03-21 14:45:30"}
+{"chatId":"69be61b2dff1c7b54f68e3be","level":"info","message":"Chat message processed","processingTime":1020,"service":"deep-research-backend","timestamp":"2026-03-21 14:45:30","userId":"69be274d3713d902de8bc310"}
+{"level":"info","message":"\u001b[0mPOST /api/chat \u001b[32m200\u001b[0m 1026.630 ms - 431\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-21 14:45:30"}
+{"level":"info","message":"Environment variables successfully validated","service":"deep-research-backend","timestamp":"2026-03-21 15:16:59"}
+{"level":"info","message":"🚀 Backend Server running on port 5000 in development mode","service":"deep-research-backend","timestamp":"2026-03-21 15:17:01"}
+{"level":"info","message":"📚 API Documentation: http://localhost:5000","service":"deep-research-backend","timestamp":"2026-03-21 15:17:01"}
+{"level":"info","message":"🏥 Health Check: http://localhost:5000/health","service":"deep-research-backend","timestamp":"2026-03-21 15:17:01"}
+{"level":"info","message":"Environment variables successfully validated","service":"deep-research-backend","timestamp":"2026-03-21 15:17:08"}
+{"level":"info","message":"🚀 Backend Server running on port 5000 in development mode","service":"deep-research-backend","timestamp":"2026-03-21 15:17:11"}
+{"level":"info","message":"📚 API Documentation: http://localhost:5000","service":"deep-research-backend","timestamp":"2026-03-21 15:17:11"}
+{"level":"info","message":"🏥 Health Check: http://localhost:5000/health","service":"deep-research-backend","timestamp":"2026-03-21 15:17:11"}
+{"level":"info","message":"Environment variables successfully validated","service":"deep-research-backend","timestamp":"2026-03-21 15:17:17"}
+{"level":"info","message":"🚀 Backend Server running on port 5000 in development mode","service":"deep-research-backend","timestamp":"2026-03-21 15:17:20"}
+{"level":"info","message":"📚 API Documentation: http://localhost:5000","service":"deep-research-backend","timestamp":"2026-03-21 15:17:20"}
+{"level":"info","message":"🏥 Health Check: http://localhost:5000/health","service":"deep-research-backend","timestamp":"2026-03-21 15:17:20"}
+{"level":"info","message":"Environment variables successfully validated","service":"deep-research-backend","timestamp":"2026-03-21 15:17:54"}
+{"level":"info","message":"🚀 Backend Server running on port 5000 in development mode","service":"deep-research-backend","timestamp":"2026-03-21 15:17:56"}
+{"level":"info","message":"📚 API Documentation: http://localhost:5000","service":"deep-research-backend","timestamp":"2026-03-21 15:17:56"}
+{"level":"info","message":"🏥 Health Check: http://localhost:5000/health","service":"deep-research-backend","timestamp":"2026-03-21 15:17:56"}
+{"level":"info","message":"Environment variables successfully validated","service":"deep-research-backend","timestamp":"2026-03-21 15:21:17"}
+{"level":"info","message":"🚀 Backend Server running on port 5000 in development mode","service":"deep-research-backend","timestamp":"2026-03-21 15:21:20"}
+{"level":"info","message":"📚 API Documentation: http://localhost:5000","service":"deep-research-backend","timestamp":"2026-03-21 15:21:20"}
+{"level":"info","message":"🏥 Health Check: http://localhost:5000/health","service":"deep-research-backend","timestamp":"2026-03-21 15:21:20"}
+{"level":"info","message":"Environment variables successfully validated","service":"deep-research-backend","timestamp":"2026-03-21 15:21:27"}
+{"level":"info","message":"🚀 Backend Server running on port 5000 in development mode","service":"deep-research-backend","timestamp":"2026-03-21 15:21:29"}
+{"level":"info","message":"📚 API Documentation: http://localhost:5000","service":"deep-research-backend","timestamp":"2026-03-21 15:21:29"}
+{"level":"info","message":"🏥 Health Check: http://localhost:5000/health","service":"deep-research-backend","timestamp":"2026-03-21 15:21:29"}

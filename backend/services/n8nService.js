@@ -3,22 +3,18 @@
 const axios = require('axios');
 const FormData = require('form-data');
 const logger = require('../utils/logger');
-const { createErrors } = require('../utils/errorHandler');
 
 const N8N_CHAT_WEBHOOK = process.env.N8N_CHAT_WEBHOOK || 'http://localhost:5678/webhook/chat';
 const N8N_UPLOAD_WEBHOOK = process.env.N8N_UPLOAD_WEBHOOK || 'http://localhost:5678/webhook/upload';
+const N8N_DELETE_WEBHOOK = process.env.N8N_DELETE_WEBHOOK || 'http://localhost:5678/webhook/delete';
 
-// Configuration for retry mechanism
 const RETRY_CONFIG = {
   maxRetries: 3,
-  retryDelay: 1000, // milliseconds
+  retryDelay: 1000,
   backoffMultiplier: 2,
   timeout: 120000
 };
 
-/**
- * Retry mechanism with exponential backoff
- */
 const retryWithBackoff = async (fn, retries = 0) => {
   try {
     return await fn();
@@ -28,37 +24,27 @@ const retryWithBackoff = async (fn, retries = 0) => {
       logger.warn(`Retry attempt ${retries + 1}/${RETRY_CONFIG.maxRetries} after ${delay}ms`, {
         error: error.message
       });
-
       await new Promise(resolve => setTimeout(resolve, delay));
       return retryWithBackoff(fn, retries + 1);
     }
-
     throw error;
   }
 };
 
-/**
- * Send chat message to n8n with retry + fallback + session context
- */
 const sendChatToN8n = async (question, previousChats = null, metadata = {}) => {
   const startTime = Date.now();
-
   try {
-    // Build payload with session context
     const payload = {
       message: question,
       timestamp: new Date().toISOString(),
       ...metadata
     };
-
-    // Add previous chats for context (RAG memory)
     if (previousChats && previousChats.length > 0) {
       payload.context = previousChats.map(chat => ({
         question: chat.question,
         answer: chat.answer
       }));
     }
-
     const response = await retryWithBackoff(() =>
       axios.post(N8N_CHAT_WEBHOOK, payload, {
         timeout: RETRY_CONFIG.timeout,
@@ -68,50 +54,32 @@ const sendChatToN8n = async (question, previousChats = null, metadata = {}) => {
         }
       })
     );
-
     const processingTime = Date.now() - startTime;
-
     logger.info('n8n chat request successful', {
       processingTime,
       messageLength: question.length,
       contextSize: previousChats?.length || 0
     });
-
-    return {
-      success: true,
-      data: response.data,
-      processingTime
-    };
+    return { success: true, data: response.data, processingTime };
   } catch (error) {
     logger.error('n8n chat service failed after retries', {
       error: error.message,
       statusCode: error.response?.status,
       processingTime: Date.now() - startTime
     });
-
-    // Fallback response for critical failures
-    const fallbackResponse = generateFallbackResponse(error);
-    return fallbackResponse;
+    return generateFallbackResponse(error);
   }
 };
 
-/**
- * Send file to n8n for ingestion with retry + fallback
- */
 const sendFileToN8n = async (file, userId) => {
   const startTime = Date.now();
-
   try {
     const formData = new FormData();
-
-    // Attach the PDF buffer — field name must be 'file' to match n8n webhook node
     formData.append('file', file.buffer, {
       filename: file.originalname,
       contentType: file.mimetype,
       knownLength: file.size
     });
-
-    // Extra metadata fields n8n can use
     formData.append('userId', userId.toString());
     formData.append('originalName', file.originalname);
     formData.append('uploadedAt', new Date().toISOString());
@@ -122,8 +90,7 @@ const sendFileToN8n = async (file, userId) => {
     logger.info('Sending file to n8n upload webhook', {
       webhook: N8N_UPLOAD_WEBHOOK,
       filename: file.originalname,
-      size: file.size,
-      contentType: formHeaders['content-type']
+      size: file.size
     });
 
     const response = await retryWithBackoff(() =>
@@ -139,16 +106,33 @@ const sendFileToN8n = async (file, userId) => {
     );
 
     const processingTime = Date.now() - startTime;
+    const responseData = response.data;
+
+    // Extract Google Drive file ID from n8n Ingestion Workflow response
+    // n8n "Respond to Webhook" returns: { id, driveFileId, name, driveFileName, ... }
+    const driveFileId =
+      responseData?.driveFileId ||
+      responseData?.id ||
+      responseData?.fileId ||
+      (Array.isArray(responseData) ? responseData[0]?.id : null) ||
+      null;
+
+    const driveFileName =
+      responseData?.driveFileName ||
+      responseData?.name ||
+      file.originalname;
 
     logger.info('n8n file upload successful', {
       filename: file.originalname,
-      fileSize: file.size,
+      driveFileId: driveFileId || 'NOT RETURNED — check Ingestion Workflow Respond node',
       processingTime
     });
 
     return {
       success: true,
-      data: response.data,
+      data: responseData,
+      driveFileId,
+      driveFileName,
       processingTime
     };
   } catch (error) {
@@ -158,22 +142,61 @@ const sendFileToN8n = async (file, userId) => {
       statusCode: error.response?.status,
       processingTime: Date.now() - startTime
     });
-
-    // Fallback response
-    const fallbackResponse = generateFallbackResponse(error, 'upload');
-    return fallbackResponse;
+    return generateFallbackResponse(error, 'upload');
   }
 };
 
 /**
- * Health check for n8n service
+ * Delete file from Google Drive + Qdrant via n8n delete webhook
  */
-const healthCheck = async () => {
+const deleteFileFromN8n = async (driveFileId, originalName, userId) => {
+  const startTime = Date.now();
   try {
-    const response = await axios.get(N8N_CHAT_WEBHOOK.replace('/webhook/chat', '/health'), {
-      timeout: 5000
+    const payload = {
+      driveFileId,
+      originalName,
+      userId: userId.toString(),
+      deletedAt: new Date().toISOString()
+    };
+
+    logger.info('Sending delete request to n8n', { driveFileId, originalName, webhook: N8N_DELETE_WEBHOOK });
+
+    const response = await retryWithBackoff(() =>
+      axios.post(N8N_DELETE_WEBHOOK, payload, {
+        timeout: 30000,
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Deep-Research-Assistant/2.0'
+        }
+      })
+    );
+
+    logger.info('n8n delete successful', {
+      driveFileId,
+      processingTime: Date.now() - startTime
     });
 
+    return { success: true, data: response.data };
+  } catch (error) {
+    logger.error('n8n delete failed', {
+      driveFileId,
+      error: error.message,
+      statusCode: error.response?.status
+    });
+    return {
+      success: false,
+      error: error.message,
+      statusCode: error.response?.status || 503
+    };
+  }
+};
+
+const healthCheck = async () => {
+  try {
+    const response = await axios.get(
+      N8N_CHAT_WEBHOOK.replace('/webhook/chat', '/health'),
+      { timeout: 5000 }
+    );
     logger.info('n8n health check passed', { status: response.status });
     return { healthy: true, status: response.status };
   } catch (error) {
@@ -182,9 +205,6 @@ const healthCheck = async () => {
   }
 };
 
-/**
- * Generate fallback response when n8n is unavailable
- */
 const generateFallbackResponse = (error, type = 'chat') => {
   const isNetworkError = error.code === 'ECONNREFUSED' || error.code === 'ECONNRESET';
   const isTimeout = error.code === 'ECONNABORTED' || error.response?.status === 504;
@@ -214,57 +234,6 @@ const generateFallbackResponse = (error, type = 'chat') => {
       : 'Upload service is temporarily unavailable. Please try again.',
     statusCode: error.response?.status || 503
   };
-};
-
-/**
- * Send delete request to n8n to remove file from Google Drive + Qdrant
- */
-const deleteFileFromN8n = async (driveFileId, originalName, userId) => {
-  const startTime = Date.now();
-
-  try {
-    const payload = {
-      driveFileId,
-      originalName,
-      userId: userId.toString(),
-      deletedAt: new Date().toISOString()
-    };
-
-    logger.info('Sending delete request to n8n', { driveFileId, originalName });
-
-    const response = await retryWithBackoff(() =>
-      axios.post(
-        process.env.N8N_DELETE_WEBHOOK || 'http://localhost:5678/webhook/delete',
-        payload,
-        {
-          timeout: 30000,
-          headers: {
-            'Content-Type': 'application/json',
-            'User-Agent': 'Deep-Research-Assistant/2.0'
-          }
-        }
-      )
-    );
-
-    logger.info('n8n delete successful', {
-      driveFileId,
-      processingTime: Date.now() - startTime
-    });
-
-    return { success: true, data: response.data };
-  } catch (error) {
-    logger.error('n8n delete failed', {
-      driveFileId,
-      error: error.message,
-      statusCode: error.response?.status
-    });
-
-    return {
-      success: false,
-      error: error.message,
-      statusCode: error.response?.status || 503
-    };
-  }
 };
 
 module.exports = {

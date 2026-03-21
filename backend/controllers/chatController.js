@@ -43,31 +43,28 @@ exports.sendMessage = asyncHandler(async (req, res, next) => {
     if (n8nResponse.success) {
       const raw = n8nResponse.data;
 
-      // n8n can return the answer in many shapes — unwrap all of them
-      let answerRaw =
-        raw?.output ||       // AI Agent default output key
-        raw?.answer ||       // {"answer": "..."} shape
-        raw?.response ||     // {"response": "..."} shape
-        raw?.text ||         // {"text": "..."} shape
-        raw?.message ||      // {"message": "..."} shape
-        raw?.data ||         // nested data
-        raw;                 // fallback: use entire response
+      // n8n "Text" mode returns a plain string directly
+      if (typeof raw === 'string' && raw.trim()) {
+        answer = raw.trim();
+      } else if (typeof raw === 'object' && raw !== null) {
+        // Fallback: handle all object shapes n8n might return
+        const answerRaw =
+          raw.output ||
+          raw.answer ||
+          raw.response ||
+          raw.text ||
+          raw.message ||
+          raw.data;
 
-      // If it's still an object (e.g. {answer: "..."}), extract the text value
-      if (typeof answerRaw === 'object' && answerRaw !== null) {
-        answerRaw =
-          answerRaw.answer ||
-          answerRaw.output ||
-          answerRaw.response ||
-          answerRaw.text ||
-          answerRaw.message ||
-          JSON.stringify(answerRaw); // last resort
+        if (typeof answerRaw === 'string' && answerRaw.trim()) {
+          answer = answerRaw.trim();
+        } else if (typeof answerRaw === 'object' && answerRaw !== null) {
+          // Double-nested object — extract string value
+          answer = answerRaw.output || answerRaw.answer || answerRaw.response || answerRaw.text || JSON.stringify(answerRaw);
+        } else {
+          answer = JSON.stringify(raw);
+        }
       }
-
-      answer = (typeof answerRaw === 'string' && answerRaw.trim())
-        ? answerRaw.trim()
-        : answer;
-
     } else if (n8nResponse.fallback && n8nResponse.message) {
       answer = n8nResponse.message;
     }
