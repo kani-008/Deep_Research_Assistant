@@ -2,14 +2,15 @@
 
 const express = require('express');
 const multer = require('multer');
-const { uploadFile } = require('../controllers/uploadController');
+const { uploadFile, getUploadHistory, getUploadById, deleteUpload } = require('../controllers/uploadController');
 const { protect } = require('../middleware/authMiddleware');
+const { uploadLimiter } = require('../middleware/securityMiddleware');
 
 const router = express.Router();
 
 // Setup Multer to handle PDF memory buffers
 const storage = multer.memoryStorage();
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   fileFilter: (req, file, cb) => {
     if (file.mimetype === 'application/pdf') {
@@ -21,13 +22,15 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
 });
 
-// Protected route for document upload
-router.post('/', protect, upload.single('file'), (req, res, next) => {
-  // Pass to controller
-  uploadFile(req, res, next);
-}, (err, req, res, next) => {
-  // Handle multer errors
-  res.status(400).json({ success: false, message: err.message });
-});
+// All upload routes are protected
+router.use(protect);
+
+// Upload file with rate limiting
+router.post('/', uploadLimiter, upload.single('file'), uploadFile);
+
+// Upload management
+router.get('/', getUploadHistory);
+router.get('/:uploadId', getUploadById);
+router.delete('/:uploadId', deleteUpload);
 
 module.exports = router;

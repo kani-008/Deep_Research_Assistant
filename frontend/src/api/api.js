@@ -31,7 +31,7 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const config = error.config;
-    
+
     // Handle 401 Unauthorized (token expired or invalid)
     if (error.response && error.response.status === 401) {
       // Clear invalid token from localStorage
@@ -39,14 +39,14 @@ api.interceptors.response.use(
       localStorage.removeItem('user');
       console.warn('Token expired or invalid. Please log in again.');
     }
-    
+
     // Retry mechanism for server errors (Max 2 retries)
     if (config && (!config.retryCount || config.retryCount < 2) && error.response && error.response.status >= 500) {
       config.retryCount = config.retryCount ? config.retryCount + 1 : 1;
       await new Promise(r => setTimeout(r, 1000));
       return api(config);
     }
-    
+
     // Extract meaningful error message from backend response
     if (error.response && error.response.data) {
       const { message, data } = error.response.data;
@@ -54,7 +54,7 @@ api.interceptors.response.use(
         return Promise.reject(new Error(message));
       }
     }
-    
+
     // Fallback to error message or generic message
     const errorMsg = error.message || 'An error occurred';
     return Promise.reject(new Error(errorMsg));
@@ -89,16 +89,25 @@ export const sendMessage = async (message, sessionId) => {
  */
 export const uploadFile = async (file, sessionId = null) => {
   const formData = new FormData();
-  formData.append('file', file); 
+  formData.append('file', file);
   if (sessionId) formData.append('sessionId', sessionId);
 
-  const response = await api.post('/upload', formData, {
+  const response = await api.post('/v1/uploads', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
     timeout: 120000, // Wait longer for embedding tasks dynamically
   });
-  
+
+  return response.data;
+};
+
+/**
+ * Delete a document from backend (triggers Drive + Qdrant deletion via n8n)
+ * @param {string} uploadId - MongoDB upload record ID
+ */
+export const deleteDocument = async (uploadId) => {
+  const response = await api.delete(`/v1/uploads/${uploadId}`);
   return response.data;
 };
 

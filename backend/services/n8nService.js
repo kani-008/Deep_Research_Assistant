@@ -2,50 +2,275 @@
 
 const axios = require('axios');
 const FormData = require('form-data');
+const logger = require('../utils/logger');
+const { createErrors } = require('../utils/errorHandler');
 
 const N8N_CHAT_WEBHOOK = process.env.N8N_CHAT_WEBHOOK || 'http://localhost:5678/webhook/chat';
 const N8N_UPLOAD_WEBHOOK = process.env.N8N_UPLOAD_WEBHOOK || 'http://localhost:5678/webhook/upload';
 
-const sendChatToN8n = async (question) => {
-  try {
-    const response = await axios.post(N8N_CHAT_WEBHOOK, {
-      message: question,
-      // For context-aware responses, you might pass more data here
-      // sessionId can be handled in controller logic and passed to n8n if preferred
-    }, {
-      timeout: 60000 // RAG operations can take time
-    });
+// Configuration for retry mechanism
+const RETRY_CONFIG = {
+  maxRetries: 3,
+  retryDelay: 1000, // milliseconds
+  backoffMultiplier: 2,
+  timeout: 120000
+};
 
-    // n8n returns something like { output: '...' } or { response: '...' }
-    // Or it might return raw data
-    return response.data;
+/**
+ * Retry mechanism with exponential backoff
+ */
+const retryWithBackoff = async (fn, retries = 0) => {
+  try {
+    return await fn();
   } catch (error) {
-    console.error('n8nService (Chat) Error:', error.message);
-    throw new Error('Error communicating with n8n RAG Chat Workflow');
+    if (retries < RETRY_CONFIG.maxRetries) {
+      const delay = RETRY_CONFIG.retryDelay * Math.pow(RETRY_CONFIG.backoffMultiplier, retries);
+      logger.warn(`Retry attempt ${retries + 1}/${RETRY_CONFIG.maxRetries} after ${delay}ms`, {
+        error: error.message
+      });
+
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return retryWithBackoff(fn, retries + 1);
+    }
+
+    throw error;
   }
 };
 
+/**
+ * Send chat message to n8n with retry + fallback + session context
+ */
+const sendChatToN8n = async (question, previousChats = null, metadata = {}) => {
+  const startTime = Date.now();
+
+  try {
+    // Build payload with session context
+    const payload = {
+      message: question,
+      timestamp: new Date().toISOString(),
+      ...metadata
+    };
+
+    // Add previous chats for context (RAG memory)
+    if (previousChats && previousChats.length > 0) {
+      payload.context = previousChats.map(chat => ({
+        question: chat.question,
+        answer: chat.answer
+      }));
+    }
+
+    const response = await retryWithBackoff(() =>
+      axios.post(N8N_CHAT_WEBHOOK, payload, {
+        timeout: RETRY_CONFIG.timeout,
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Deep-Research-Assistant/2.0'
+        }
+      })
+    );
+
+    const processingTime = Date.now() - startTime;
+
+    logger.info('n8n chat request successful', {
+      processingTime,
+      messageLength: question.length,
+      contextSize: previousChats?.length || 0
+    });
+
+    return {
+      success: true,
+      data: response.data,
+      processingTime
+    };
+  } catch (error) {
+    logger.error('n8n chat service failed after retries', {
+      error: error.message,
+      statusCode: error.response?.status,
+      processingTime: Date.now() - startTime
+    });
+
+    // Fallback response for critical failures
+    const fallbackResponse = generateFallbackResponse(error);
+    return fallbackResponse;
+  }
+};
+
+/**
+ * Send file to n8n for ingestion with retry + fallback
+ */
 const sendFileToN8n = async (file, userId) => {
+  const startTime = Date.now();
+
   try {
     const formData = new FormData();
+
+    // Attach the PDF buffer — field name must be 'file' to match n8n webhook node
     formData.append('file', file.buffer, {
       filename: file.originalname,
-      contentType: file.mimetype
+      contentType: file.mimetype,
+      knownLength: file.size
     });
+
+    // Extra metadata fields n8n can use
     formData.append('userId', userId.toString());
+    formData.append('originalName', file.originalname);
+    formData.append('uploadedAt', new Date().toISOString());
+    formData.append('fileSize', file.size.toString());
 
-    const response = await axios.post(N8N_UPLOAD_WEBHOOK, formData, {
-      headers: {
-        ...formData.getHeaders()
-      },
-      timeout: 120000 // Ingestion/embedding can take longer
+    const formHeaders = formData.getHeaders();
+
+    logger.info('Sending file to n8n upload webhook', {
+      webhook: N8N_UPLOAD_WEBHOOK,
+      filename: file.originalname,
+      size: file.size,
+      contentType: formHeaders['content-type']
     });
 
-    return response.data;
+    const response = await retryWithBackoff(() =>
+      axios.post(N8N_UPLOAD_WEBHOOK, formData, {
+        headers: {
+          ...formHeaders,
+          'User-Agent': 'Deep-Research-Assistant/2.0'
+        },
+        timeout: RETRY_CONFIG.timeout,
+        maxContentLength: 100 * 1024 * 1024,
+        maxBodyLength: 100 * 1024 * 1024
+      })
+    );
+
+    const processingTime = Date.now() - startTime;
+
+    logger.info('n8n file upload successful', {
+      filename: file.originalname,
+      fileSize: file.size,
+      processingTime
+    });
+
+    return {
+      success: true,
+      data: response.data,
+      processingTime
+    };
   } catch (error) {
-    console.error('n8nService (Upload) Error:', error.message || error.response?.data);
-    throw new Error('Error communicating with n8n RAG Ingestion Workflow');
+    logger.error('n8n file upload failed after retries', {
+      filename: file.originalname,
+      error: error.message,
+      statusCode: error.response?.status,
+      processingTime: Date.now() - startTime
+    });
+
+    // Fallback response
+    const fallbackResponse = generateFallbackResponse(error, 'upload');
+    return fallbackResponse;
   }
 };
 
-module.exports = { sendChatToN8n, sendFileToN8n };
+/**
+ * Health check for n8n service
+ */
+const healthCheck = async () => {
+  try {
+    const response = await axios.get(N8N_CHAT_WEBHOOK.replace('/webhook/chat', '/health'), {
+      timeout: 5000
+    });
+
+    logger.info('n8n health check passed', { status: response.status });
+    return { healthy: true, status: response.status };
+  } catch (error) {
+    logger.error('n8n health check failed', { error: error.message });
+    return { healthy: false, error: error.message };
+  }
+};
+
+/**
+ * Generate fallback response when n8n is unavailable
+ */
+const generateFallbackResponse = (error, type = 'chat') => {
+  const isNetworkError = error.code === 'ECONNREFUSED' || error.code === 'ECONNRESET';
+  const isTimeout = error.code === 'ECONNABORTED' || error.response?.status === 504;
+
+  if (type === 'chat') {
+    return {
+      success: false,
+      error: 'n8n service temporarily unavailable',
+      fallback: true,
+      message: isTimeout
+        ? 'RAG processing took too long. Please try with a shorter query.'
+        : isNetworkError
+        ? 'Cannot connect to RAG service. Please try again later.'
+        : 'RAG service is temporarily unavailable. Please try again.',
+      statusCode: error.response?.status || 503
+    };
+  }
+
+  return {
+    success: false,
+    error: 'n8n upload service temporarily unavailable',
+    fallback: true,
+    message: isTimeout
+      ? 'File processing took too long. Please try again.'
+      : isNetworkError
+      ? 'Cannot connect to upload service. Please try again later.'
+      : 'Upload service is temporarily unavailable. Please try again.',
+    statusCode: error.response?.status || 503
+  };
+};
+
+/**
+ * Send delete request to n8n to remove file from Google Drive + Qdrant
+ */
+const deleteFileFromN8n = async (driveFileId, originalName, userId) => {
+  const startTime = Date.now();
+
+  try {
+    const payload = {
+      driveFileId,
+      originalName,
+      userId: userId.toString(),
+      deletedAt: new Date().toISOString()
+    };
+
+    logger.info('Sending delete request to n8n', { driveFileId, originalName });
+
+    const response = await retryWithBackoff(() =>
+      axios.post(
+        process.env.N8N_DELETE_WEBHOOK || 'http://localhost:5678/webhook/delete',
+        payload,
+        {
+          timeout: 30000,
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'Deep-Research-Assistant/2.0'
+          }
+        }
+      )
+    );
+
+    logger.info('n8n delete successful', {
+      driveFileId,
+      processingTime: Date.now() - startTime
+    });
+
+    return { success: true, data: response.data };
+  } catch (error) {
+    logger.error('n8n delete failed', {
+      driveFileId,
+      error: error.message,
+      statusCode: error.response?.status
+    });
+
+    return {
+      success: false,
+      error: error.message,
+      statusCode: error.response?.status || 503
+    };
+  }
+};
+
+module.exports = {
+  sendChatToN8n,
+  sendFileToN8n,
+  deleteFileFromN8n,
+  healthCheck,
+  retryWithBackoff
+};

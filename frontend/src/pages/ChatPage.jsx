@@ -3,123 +3,258 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
-  Send, 
-  Paperclip, 
-  FileText, 
-  Cpu, 
-  User, 
-  Copy, 
-  RefreshCw, 
-  ThumbsUp, 
-  ThumbsDown,
-  Sparkles,
-  Search,
-  ChevronDown,
-  MessageSquare,
-  Plus
+  Send, Paperclip, FileText, Copy, ThumbsUp, ThumbsDown,
+  Sparkles, RotateCcw, Check, ChevronDown, Cpu
 } from 'lucide-react';
 import { useChat } from '../context/ChatContext';
-import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { sendMessage, uploadFile } from '../api/api';
 
-const MessageBubble = ({ message }) => {
-  const isAI = message.sender === 'ai';
+// Markdown-like renderer for AI responses
+const renderText = (text) => {
+  if (!text) return null;
   
-  return (
-    <motion.div 
-      initial={{ opacity: 0, y: 10, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      className={`flex gap-4 p-4 md:p-6 mb-2 rounded-[1.5rem] leading-relaxed transition-all group ${
-        isAI ? 'chat-bubble-ai border-l-4 border-l-primary/50' : 'chat-bubble-user ml-12 border-l-4 border-l-accent/50 self-end'
-      }`}
-    >
-      <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center font-bold text-white shadow-xl ${
-        isAI ? 'bg-primary' : 'bg-accent'
-      }`}>
-        {isAI ? <Cpu size={20} /> : <User size={20} />}
-      </div>
-      <div className="flex-1 space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-black text-neutral-500 uppercase tracking-widest">{isAI ? 'Deep Assistant' : 'You'}</span>
-          <div className="opacity-0 group-hover:opacity-100 flex items-center gap-3 text-neutral-500 transition-all">
-            <button className="hover:text-white"><Copy size={14} /></button>
-            {isAI && (
-              <>
-                <button className="hover:text-white"><ThumbsUp size={14} /></button>
-                <button className="hover:text-white"><ThumbsDown size={14} /></button>
-              </>
-            )}
-          </div>
-        </div>
-        <div className="text-[15px] font-medium leading-[1.6]">
-          {message.text}
-        </div>
-        
-        {message.files && message.files.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-2">
-            {message.files.map((file, i) => (
-              <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-xs font-bold text-neutral-300">
-                <FileText size={14} className="text-primary" />
-                <span>{file.name}</span>
-              </div>
-            ))}
-          </div>
-        )}
+  // Split into lines for processing
+  const lines = text.split('\n');
+  const elements = [];
+  let i = 0;
 
-        {isAI && message.sources && (
-          <div className="pt-4 border-t border-white/5 animate-fade-in">
-            <p className="text-[11px] font-black text-neutral-600 uppercase tracking-widest mb-2 flex items-center gap-2">
-              <Search size={12} />
-              Verified Sources
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {message.sources.map((source, i) => (
-                <div key={i} className="px-3 py-1 bg-primary/5 border border-primary/20 rounded-lg text-[11px] font-bold text-primary flex items-center gap-1.5 cursor-pointer hover:bg-primary/10 transition-colors">
-                  <FileText size={10} />
-                  <span>{source.filename} (Page {source.page})</span>
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Code block
+    if (line.startsWith('```')) {
+      const lang = line.slice(3).trim();
+      const codeLines = [];
+      i++;
+      while (i < lines.length && !lines[i].startsWith('```')) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      elements.push(
+        <pre key={i} className="bg-black/40 border border-white/10 rounded-xl p-4 my-3 overflow-x-auto">
+          <code className="text-emerald-400 text-sm font-mono">{codeLines.join('\n')}</code>
+        </pre>
+      );
+    }
+    // Heading
+    else if (line.startsWith('### ')) {
+      elements.push(<h3 key={i} className="text-base font-bold text-white mt-4 mb-1">{line.slice(4)}</h3>);
+    }
+    else if (line.startsWith('## ')) {
+      elements.push(<h2 key={i} className="text-lg font-bold text-white mt-5 mb-2">{line.slice(3)}</h2>);
+    }
+    else if (line.startsWith('# ')) {
+      elements.push(<h1 key={i} className="text-xl font-bold text-white mt-5 mb-2">{line.slice(2)}</h1>);
+    }
+    // Bullet point
+    else if (line.startsWith('- ') || line.startsWith('* ')) {
+      elements.push(
+        <div key={i} className="flex gap-2 my-0.5">
+          <span className="text-primary mt-1.5 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-primary"></span>
+          <span className="text-neutral-200 text-sm leading-relaxed">{formatInline(line.slice(2))}</span>
+        </div>
+      );
+    }
+    // Numbered list
+    else if (/^\d+\.\s/.test(line)) {
+      const num = line.match(/^(\d+)\./)[1];
+      elements.push(
+        <div key={i} className="flex gap-3 my-0.5">
+          <span className="text-primary font-bold text-xs mt-0.5 flex-shrink-0 w-4">{num}.</span>
+          <span className="text-neutral-200 text-sm leading-relaxed">{formatInline(line.replace(/^\d+\.\s/, ''))}</span>
+        </div>
+      );
+    }
+    // Empty line
+    else if (line.trim() === '') {
+      elements.push(<div key={i} className="h-2" />);
+    }
+    // Normal paragraph
+    else {
+      elements.push(
+        <p key={i} className="text-neutral-200 text-sm leading-relaxed">
+          {formatInline(line)}
+        </p>
+      );
+    }
+    i++;
+  }
+  return elements;
+};
+
+const formatInline = (text) => {
+  // Bold
+  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i} className="text-white font-semibold">{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith('`') && part.endsWith('`')) {
+      return <code key={i} className="bg-black/40 text-emerald-400 px-1.5 py-0.5 rounded text-xs font-mono">{part.slice(1, -1)}</code>;
+    }
+    return part;
+  });
+};
+
+const MessageBubble = ({ message, isLast }) => {
+  const isAI = message.sender === 'ai';
+  const [copied, setCopied] = useState(false);
+  const [liked, setLiked] = useState(null);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(message.text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (!isAI) {
+    return (
+      <div className="flex justify-end mb-6 group">
+        <div className="max-w-[75%]">
+          <div className="bg-primary/20 border border-primary/30 text-white rounded-2xl rounded-tr-sm px-5 py-3.5 text-sm leading-relaxed">
+            {message.text}
+          </div>
+          {message.files?.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2 justify-end">
+              {message.files.map((file, i) => (
+                <div key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-neutral-400">
+                  <FileText size={12} className="text-primary" />
+                  {file.name}
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+          <p className="text-[10px] text-neutral-600 mt-1.5 text-right">
+            {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </p>
+        </div>
       </div>
-    </motion.div>
+    );
+  }
+
+  return (
+    <div className="mb-8 group">
+      <div className="flex gap-3 items-start">
+        {/* AI Avatar */}
+        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 mt-0.5 shadow-lg shadow-primary/20">
+          <Sparkles size={15} className="text-white" />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Deep Assistant</span>
+            <span className="text-[10px] text-neutral-600">
+              {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          </div>
+
+          {/* Response content */}
+          <div className="text-neutral-200 space-y-1">
+            {renderText(message.text)}
+          </div>
+
+          {/* Sources */}
+          {message.sources?.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-white/5">
+              <p className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest mb-2">Sources</p>
+              <div className="flex flex-wrap gap-2">
+                {message.sources.map((source, i) => (
+                  <div key={i} className="px-2.5 py-1 bg-primary/5 border border-primary/20 rounded-lg text-[11px] font-medium text-primary flex items-center gap-1.5">
+                    <FileText size={10} />
+                    {source.filename} · p.{source.page}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button onClick={handleCopy} className="p-1.5 hover:bg-white/10 rounded-lg text-neutral-600 hover:text-neutral-300 transition-colors flex items-center gap-1.5 text-xs">
+              {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+              {copied ? 'Copied' : 'Copy'}
+            </button>
+            <button onClick={() => setLiked(true)} className={`p-1.5 hover:bg-white/10 rounded-lg transition-colors ${liked === true ? 'text-emerald-400' : 'text-neutral-600 hover:text-neutral-300'}`}>
+              <ThumbsUp size={13} />
+            </button>
+            <button onClick={() => setLiked(false)} className={`p-1.5 hover:bg-white/10 rounded-lg transition-colors ${liked === false ? 'text-red-400' : 'text-neutral-600 hover:text-neutral-300'}`}>
+              <ThumbsDown size={13} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
+
+const TypingIndicator = () => (
+  <div className="mb-8 flex gap-3 items-start">
+    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/20">
+      <Sparkles size={15} className="text-white animate-pulse" />
+    </div>
+    <div className="flex-1">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Deep Assistant</span>
+      </div>
+      <div className="flex items-center gap-1.5 py-2">
+        <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+        <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+        <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+      </div>
+    </div>
+  </div>
+);
+
+const SUGGESTIONS = [
+  "Summarize the key findings in my documents",
+  "What are the main topics covered?",
+  "Compare the methodologies across documents",
+  "Extract all important dates and deadlines",
+];
 
 const ChatPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { sessions, currentSessionId, setCurrentSessionId, addMessage, createNewChat, getChatMessages } = useChat();
-  
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState([]);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
   const messagesEndRef = useRef(null);
+  const scrollAreaRef = useRef(null);
+  const textareaRef = useRef(null);
 
   const currentMessages = getChatMessages(id);
-  const session = sessions.find(s => s.sessionId === id);
 
   useEffect(() => {
-    if (id && id !== currentSessionId) {
-      setCurrentSessionId(id);
-    } else if (!id) {
-       // If no ID, handle it
-    }
+    if (id && id !== currentSessionId) setCurrentSessionId(id);
   }, [id]);
 
   useEffect(() => {
     scrollToBottom();
   }, [currentMessages, isTyping]);
 
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + 'px';
+    }
+  }, [input]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    setShowScrollBtn(scrollHeight - scrollTop - clientHeight > 200);
+  };
+
   const handleSend = async (e) => {
     e?.preventDefault();
-    if ((!input.trim() && attachedFiles.length === 0) || isTyping) return;
+    const trimmed = input.trim();
+    if ((!trimmed && attachedFiles.length === 0) || isTyping) return;
 
     let targetId = id;
     if (!targetId) {
@@ -130,7 +265,7 @@ const ChatPage = () => {
     const userMessage = {
       id: Date.now(),
       sender: 'user',
-      text: input,
+      text: trimmed,
       files: [...attachedFiles],
       timestamp: new Date().toISOString()
     };
@@ -141,22 +276,19 @@ const ChatPage = () => {
     setIsTyping(true);
 
     try {
-      // Real API Call
-      const aiText = await sendMessage(input || "Analyze the uploaded file", targetId);
-      
-      const aiResponse = {
+      const aiText = await sendMessage(trimmed || 'Analyze the uploaded file', targetId);
+      addMessage(targetId, {
         id: Date.now() + 1,
         sender: 'ai',
         text: aiText,
         timestamp: new Date().toISOString()
-      };
-      addMessage(targetId, aiResponse);
+      });
     } catch (err) {
-      toast.error(err.message || 'Failed to communicate with Deep Assistant');
+      toast.error(err.message || 'Failed to reach Deep Assistant');
       addMessage(targetId, {
         id: Date.now() + 1,
         sender: 'ai',
-        text: 'Sorry, I encountered an internal error. Please try again.',
+        text: 'Sorry, I encountered an error. Please try again.',
         timestamp: new Date().toISOString()
       });
     } finally {
@@ -166,27 +298,20 @@ const ChatPage = () => {
 
   const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files);
-    const validFiles = files.filter(f => f.type === 'application/pdf');
-    if (validFiles.length !== files.length) {
-      toast.error('Only PDF files are allowed for ingestion');
-    }
-    if (validFiles.length === 0) return;
+    const valid = files.filter(f => f.type === 'application/pdf');
+    if (valid.length !== files.length) toast.error('Only PDF files are supported');
+    if (!valid.length) return;
 
-    for (const file of validFiles) {
-      let loadingId;
+    for (const file of valid) {
+      const toastId = toast.loading(`Uploading ${file.name}...`);
       try {
-        loadingId = toast.loading(`Uploading ${file.name}...`);
         await uploadFile(file, id);
         setAttachedFiles(prev => [...prev, file]);
-        toast.success(`${file.name} uploaded and indexed successfully!`, { id: loadingId });
+        toast.success(`${file.name} ready`, { id: toastId });
       } catch (err) {
-        toast.error(`Failed to upload ${file.name}: ${err.message}`, { id: loadingId });
+        toast.error(`Failed: ${err.message}`, { id: toastId });
       }
     }
-  };
-
-  const handleSuggestionClick = (suggestion) => {
-    setInput(suggestion);
   };
 
   if (!id && sessions.length > 0) {
@@ -194,141 +319,124 @@ const ChatPage = () => {
     return null;
   }
 
+  const isEmpty = currentMessages.length === 0;
+
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden relative">
-      {/* Background patterns */}
-      <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden opacity-10">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary rounded-full blur-[100px]"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent rounded-full blur-[100px]"></div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6 space-y-6 custom-scrollbar">
-        {currentMessages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center max-w-2xl mx-auto space-y-8 animate-fade-in pt-20">
-            <div className="w-20 h-20 rounded-[2rem] bg-gradient-to-tr from-primary to-accent flex items-center justify-center shadow-2xl animate-bounce">
-              <Sparkles size={40} className="text-white" />
-            </div>
-            <div>
-              <h2 className="text-3xl font-black text-white mb-4">Deep Research Assistant</h2>
-              <p className="text-lg text-neutral-400 font-medium">Hello! I'm your research assistant. Ask me anything about your documents or start a new analysis.</p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-              {[
-                "Summarize my recent research papers",
-                "Compare the methodology sections",
-                "Find discrepancies in data results",
-                "Draft a report on the main findings"
-              ].map((query, i) => (
-                <button 
-                  key={i} 
-                  onClick={() => handleSuggestionClick(query)}
-                  className="p-4 bg-white/5 border border-white/5 rounded-2xl text-sm font-bold text-neutral-400 hover:bg-white/10 hover:text-white transition-all text-left flex items-center gap-3 group"
-                >
-                  <MessageSquare size={16} className="text-primary group-hover:scale-110 transition-transform" />
-                  {query}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="max-w-4xl mx-auto space-y-4">
-            {currentMessages.map(msg => (
-              <MessageBubble key={msg.id} message={msg} />
-            ))}
-            
-            {isTyping && (
-              <div className="flex gap-4 p-6 chat-bubble-ai rounded-[1.5rem] w-fit border-l-4 border-l-primary/30">
-                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center animate-pulse">
-                  <Cpu size={20} className="text-white" />
+    <div className="flex flex-col h-[calc(100vh-64px)] relative bg-background">
+      {/* Messages Area */}
+      <div
+        ref={scrollAreaRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto custom-scrollbar"
+      >
+        <div className="max-w-3xl mx-auto px-4 md:px-6 py-8">
+          {isEmpty ? (
+            /* Welcome Screen */
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-2xl shadow-primary/30">
+                  <Sparkles size={32} className="text-white" />
                 </div>
-                <div className="flex flex-col gap-2 justify-center">
-                  <div className="flex gap-1.5 items-center">
-                    <div className="w-2 h-2 bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-                    <div className="w-2 h-2 bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    <div className="w-2 h-2 bg-neutral-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-                  </div>
-                  <span className="text-xs font-black text-neutral-600 uppercase tracking-widest">Assistant is thinking...</span>
-                </div>
+                <div className="absolute -inset-2 bg-gradient-to-br from-primary/20 to-accent/20 rounded-3xl blur-xl -z-10" />
               </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-        )}
+
+              <div className="space-y-3">
+                <h2 className="text-2xl md:text-3xl font-bold text-white">How can I help you today?</h2>
+                <p className="text-neutral-400 text-sm max-w-md">
+                  Ask me anything about your uploaded documents. I'll search through them and give you precise, accurate answers.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-xl">
+                {SUGGESTIONS.map((s, i) => (
+                  <button key={i} onClick={() => setInput(s)}
+                    className="p-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-2xl text-sm text-neutral-300 hover:text-white text-left transition-all group"
+                  >
+                    <span className="text-primary mr-2 group-hover:translate-x-0.5 inline-block transition-transform">→</span>
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              {currentMessages.map((msg, idx) => (
+                <MessageBubble key={msg.id} message={msg} isLast={idx === currentMessages.length - 1} />
+              ))}
+              {isTyping && <TypingIndicator />}
+            </>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
-      {/* Suggested Follow-ups */}
-      {currentMessages.length > 0 && !isTyping && currentMessages[currentMessages.length-1].sender === 'ai' && (
-        <div className="max-w-4xl mx-auto w-full px-4 md:px-8 mb-4">
-          <div className="flex flex-wrap gap-2">
-            {currentMessages[currentMessages.length-1].suggestions?.map((item, i) => (
-              <button 
-                key={i} 
-                onClick={() => handleSuggestionClick(item)}
-                className="px-4 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs font-bold text-neutral-400 hover:bg-white/10 hover:text-white hover:border-white/20 transition-all flex items-center gap-2 group"
-              >
-                <Plus size={14} className="text-primary group-hover:rotate-90 transition-transform" />
-                {item}
-              </button>
-            ))}
-          </div>
-        </div>
+      {/* Scroll to bottom button */}
+      {showScrollBtn && (
+        <button onClick={scrollToBottom}
+          className="absolute bottom-28 right-6 p-2.5 bg-surface border border-white/10 rounded-full shadow-xl hover:bg-white/10 transition-all z-10"
+        >
+          <ChevronDown size={18} className="text-neutral-400" />
+        </button>
       )}
 
-      {/* Input area */}
-      <div className="border-t border-white/5 bg-background/80 backdrop-blur-xl p-4 md:p-6 pb-8">
-        <div className="max-w-4xl mx-auto relative group">
-          <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-3xl blur opacity-0 group-focus-within:opacity-20 transition-opacity"></div>
-          
+      {/* Input Area */}
+      <div className="border-t border-white/5 bg-background/95 backdrop-blur-xl px-4 py-4">
+        <div className="max-w-3xl mx-auto">
+          {/* Attached files */}
           {attachedFiles.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3 bg-white/5 p-2 rounded-2xl border border-white/10">
+            <div className="flex flex-wrap gap-2 mb-3">
               {attachedFiles.map((file, i) => (
-                <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-surface border border-white/10 rounded-xl text-xs font-bold text-white shadow-lg">
-                  <FileText size={14} className="text-primary" />
-                  <span className="max-w-[150px] truncate">{file.name}</span>
-                  <button onClick={() => setAttachedFiles(prev => prev.filter((_, idx) => idx !== i))} className="hover:text-red-400">
-                    <RefreshCw size={12} className="rotate-45" />
-                  </button>
+                <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-xs text-white">
+                  <FileText size={12} className="text-primary" />
+                  <span className="max-w-[120px] truncate">{file.name}</span>
+                  <button onClick={() => setAttachedFiles(prev => prev.filter((_, idx) => idx !== i))} className="text-neutral-500 hover:text-red-400 transition-colors">×</button>
                 </div>
               ))}
             </div>
           )}
 
-          <form 
-            onSubmit={handleSend}
-            className="relative flex items-end gap-2 p-2 bg-surface border border-white/10 rounded-3xl shadow-2xl"
-          >
-            <div className="flex flex-col gap-1 p-1">
-              <label className="p-3 text-neutral-500 hover:text-white transition-colors cursor-pointer block rounded-2xl hover:bg-white/5">
-                <Paperclip size={22} />
-                <input type="file" className="hidden" multiple onChange={handleFileUpload} />
+          {/* Input box */}
+          <div className="relative bg-white/5 border border-white/10 rounded-2xl hover:border-white/20 focus-within:border-primary/50 focus-within:bg-white/[0.07] transition-all shadow-xl">
+            <div className="flex items-end gap-2 p-3">
+              {/* Attach */}
+              <label className="p-2 text-neutral-500 hover:text-white transition-colors cursor-pointer rounded-xl hover:bg-white/5 flex-shrink-0">
+                <Paperclip size={19} />
+                <input type="file" className="hidden" multiple accept=".pdf" onChange={handleFileUpload} />
               </label>
-            </div>
-            <textarea 
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
+
+              {/* Textarea */}
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+                }}
+                placeholder="Message Deep Assistant..."
+                rows={1}
+                className="flex-1 bg-transparent border-none outline-none text-sm text-white placeholder:text-neutral-600 resize-none py-1.5 max-h-48 custom-scrollbar leading-relaxed"
+              />
+
+              {/* Send */}
+              <button onClick={handleSend}
+                disabled={(!input.trim() && !attachedFiles.length) || isTyping}
+                className={`p-2.5 rounded-xl transition-all flex-shrink-0 ${
+                  (!input.trim() && !attachedFiles.length) || isTyping
+                    ? 'bg-white/5 text-neutral-600 cursor-not-allowed'
+                    : 'bg-primary hover:bg-primary/80 text-white shadow-lg shadow-primary/20'
+                }`}
+              >
+                {isTyping
+                  ? <RotateCcw size={18} className="animate-spin" />
+                  : <Send size={18} />
                 }
-              }}
-              placeholder="Ask a question about your documents..."
-              rows={1}
-              className="flex-1 bg-transparent border-none outline-none text-md px-2 py-3 resize-none max-h-48 custom-scrollbar"
-            />
-            <button 
-              type="submit"
-              disabled={(!input.trim() && attachedFiles.length === 0) || isTyping}
-              className={`p-3 rounded-2xl transition-all shadow-xl flex items-center justify-center ${
-                (!input.trim() && attachedFiles.length === 0) || isTyping 
-                ? 'bg-neutral-800 text-neutral-600' 
-                : 'bg-primary hover:bg-primary-dark text-white shadow-primary/20'
-              }`}
-            >
-              <Send size={22} />
-            </button>
-          </form>
-          <p className="mt-3 text-center text-[10px] uppercase tracking-[0.2em] font-black text-neutral-600">AI can make mistakes. Verify important information.</p>
+              </button>
+            </div>
+          </div>
+
+          <p className="text-center text-[10px] text-neutral-700 mt-2 tracking-wider uppercase">
+            Deep Assistant can make mistakes · Verify important information
+          </p>
         </div>
       </div>
     </div>
