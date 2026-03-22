@@ -1,4 +1,4 @@
-// ./frontend/src/App.jsx
+// src/App.jsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -14,78 +14,44 @@ import ToolsPage from './pages/ToolsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import { Toaster } from 'react-hot-toast';
 
-const App = () => {
-  return (
-    <AuthProvider>
-      <ChatProvider>
-        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
+const App = () => (
+  <AuthProvider>
+    <ChatProvider>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <Routes>
+          {/* Public */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
 
-            {/* Protected Routes */}
-            <Route element={<ProtectedRoute />}>
-              <Route 
-                path="/dashboard" 
-                element={
-                  <Layout>
-                    <DashboardPage />
-                  </Layout>
-                } 
-              />
-              <Route 
-                path="/chat/:id" 
-                element={
-                  <Layout>
-                    <ChatPage />
-                  </Layout>
-                } 
-              />
-              <Route 
-                path="/chat" 
-                element={
-                  <Layout>
-                    <ChatPage />
-                  </Layout>
-                } 
-              />
-              <Route 
-                path="/tools" 
-                element={
-                  <Layout>
-                    <ToolsPage />
-                  </Layout>
-                } 
-              />
-              <Route 
-                path="/analytics" 
-                element={
-                  <Layout>
-                    <AnalyticsPage />
-                  </Layout>
-                } 
-              />
-            </Route>
+          {/* Protected — wrapped in Layout */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/dashboard" element={<Layout><DashboardPage /></Layout>} />
+            <Route path="/chat" element={<Layout><ChatPage /></Layout>} />
+            <Route path="/chat/:id" element={<Layout><ChatPage /></Layout>} />
+            <Route path="/tools" element={<Layout><ToolsPage /></Layout>} />
+            <Route path="/analytics" element={<Layout><AnalyticsPage /></Layout>} />
+          </Route>
 
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Router>
-      </ChatProvider>
-      <Toaster 
-        position="bottom-right" 
-        toastOptions={{
-          style: {
-            background: '#1e1e1e',
-            color: '#fff',
-            border: '1px solid rgba(255,255,255,0.1)',
-          }
-        }} 
-      />
-    </AuthProvider>
-  );
-};
+          {/* Catch-all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </ChatProvider>
+    <Toaster
+      position="bottom-right"
+      toastOptions={{
+        style: {
+          background: '#0e0e1c',
+          color: '#fff',
+          border: '1px solid rgba(255,255,255,0.08)',
+          fontSize: '13px',
+          borderRadius: '12px',
+          maxWidth: '320px',
+        },
+      }}
+    />
+  </AuthProvider>
+);
 
 export default App;

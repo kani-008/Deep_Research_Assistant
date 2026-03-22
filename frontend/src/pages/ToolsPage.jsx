@@ -1,126 +1,125 @@
-// ./frontend/src/pages/ToolsPage.jsx
-
-import React, { useState } from 'react';
-import { 
-  FileText, 
-  Layers, 
-  BarChart2, 
-  PieChart, 
-  Sparkles, 
-  Brain, 
-  Plus, 
-  Search, 
-  ArrowRight,
-  Zap,
-  BookOpen,
-  PieChart as PieIcon,
-  ChevronRight,
-  Download,
-  Share2,
-  Database
+// src/pages/ToolsPage.jsx
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  FileText, Layers, BarChart2, Database,
+  Sparkles, Zap, ArrowRight, CheckCircle2
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 
-const ToolCard = ({ icon: Icon, title, description, badge, onClick, color }) => (
-  <motion.div 
-    whileHover={{ y: -5 }}
-    className="bg-white/5 border border-white/5 rounded-[2.5rem] p-8 flex flex-col gap-6 hover:bg-white/[0.08] hover:border-white/10 transition-all group relative overflow-hidden"
-  >
-    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[40px] translate-x-12 -translate-y-12"></div>
-    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl transition-transform group-hover:scale-110 ${color}`}>
-      <Icon size={28} className="text-white" />
+const ToolCard = ({ icon: Icon, title, desc, badge, accent, bg, ring, onClick }) => (
+  <button onClick={onClick}
+    className="text-left relative group bg-[#0d0d1a] border border-white/[0.06] rounded-2xl p-5 sm:p-6 flex flex-col gap-4 transition-all hover:border-white/[0.14] hover:bg-[#10101e] hover:-translate-y-0.5 cursor-pointer w-full">
+    {badge && (
+      <span className={`absolute top-4 right-4 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${
+        badge === 'Popular'
+          ? 'bg-violet-500/15 text-violet-400 ring-1 ring-violet-500/20'
+          : 'bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20'
+      }`}>{badge}</span>
+    )}
+    <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl ${bg} ring-1 ${ring} flex items-center justify-center flex-shrink-0`}>
+      <Icon size={18} className={accent} />
     </div>
     <div className="flex-1">
-      <div className="flex items-center gap-3 mb-2">
-        <h3 className="text-xl font-black text-white">{title}</h3>
-        {badge && <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-emerald-500/20">{badge}</span>}
-      </div>
-      <p className="text-sm font-medium text-neutral-400 leading-relaxed">{description}</p>
+      <h3 className="font-bold text-white text-[14px] sm:text-[15px] mb-1.5">{title}</h3>
+      <p className="text-[12px] sm:text-[13px] text-neutral-500 leading-relaxed">{desc}</p>
     </div>
-    <button 
-      onClick={onClick}
-      className="mt-4 flex items-center gap-2 py-3 px-6 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all font-bold text-sm w-fit group/btn"
-    >
-      <span>Open Tool</span>
-      <ArrowRight size={16} className="text-primary group-hover/btn:translate-x-1 transition-transform" />
-    </button>
-  </motion.div>
+    <div className="flex items-center gap-1.5 text-[11px] sm:text-[12px] font-semibold text-neutral-500 group-hover:text-violet-400 transition-colors mt-auto pt-1">
+      Open Tool <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+    </div>
+  </button>
 );
 
 const ToolsPage = () => {
-  return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-12 pb-20">
-      <header>
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-4">
-          <Brain size={12} className="text-primary" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Deep AI Toolbox</span>
-        </div>
-        <h1 className="text-3xl md:text-5xl font-black text-white mb-3">Advanced <span className="gradient-text">Research Tools</span></h1>
-        <p className="text-neutral-400 font-medium max-w-2xl">Supercharge your productivity with our specialized AI tools designed for complex document analysis and knowledge extraction.</p>
-      </header>
+  const navigate = useNavigate();
+  const goChat = () => navigate('/chat');
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
-        <ToolCard 
-          icon={FileText}
-          title="Document Summary Tool"
-          description="Generate comprehensive long-form summaries, executive overviews, or bulleted key takeaways from multiple files at once."
-          badge="Popular"
-          color="bg-blue-600 shadow-blue-600/20"
-          onClick={() => {}}
-        />
-        <ToolCard 
-          icon={Layers}
-          title="Compare Documents"
-          description="Upload two or more documents to find similarities, direct contradictions, and unique insights across different sources."
-          badge="Beta"
-          color="bg-accent shadow-accent/20"
-          onClick={() => {}}
-        />
-        <ToolCard 
-          icon={BarChart2}
-          title="Report Generator"
-          description="Input a research topic and let AI synthesize your uploaded data into a professionally structured research report."
-          color="bg-indigo-600 shadow-indigo-600/20"
-          onClick={() => {}}
-        />
-        <ToolCard 
-          icon={Database}
-          title="Question Generator"
-          description="Automatically generate MCQs, key concepts, or viva questions based on your study materials for better exam prep."
-          color="bg-emerald-600 shadow-emerald-600/20"
-          onClick={() => {}}
-        />
+  const tools = [
+    {
+      icon: FileText, title: 'Document Summary', badge: 'Popular',
+      desc: 'Generate comprehensive summaries, executive overviews, or key takeaways from multiple PDFs at once.',
+      accent: 'text-violet-400', bg: 'bg-violet-500/10', ring: 'ring-violet-500/20',
+    },
+    {
+      icon: Layers, title: 'Compare Documents', badge: 'Beta',
+      desc: 'Upload two or more documents to find similarities, contradictions, and unique insights across sources.',
+      accent: 'text-cyan-400', bg: 'bg-cyan-500/10', ring: 'ring-cyan-500/20',
+    },
+    {
+      icon: BarChart2, title: 'Report Generator',
+      desc: 'Enter a research topic and let AI synthesize your uploaded data into a structured research report.',
+      accent: 'text-emerald-400', bg: 'bg-emerald-500/10', ring: 'ring-emerald-500/20',
+    },
+    {
+      icon: Database, title: 'Question Generator',
+      desc: 'Auto-generate MCQs, key concepts, or exam questions from your study materials for better prep.',
+      accent: 'text-amber-400', bg: 'bg-amber-500/10', ring: 'ring-amber-500/20',
+    },
+  ];
+
+  return (
+    <div className="max-w-5xl mx-auto px-4 sm:px-5 py-6 sm:py-8 pb-16 space-y-6 sm:space-y-8">
+
+      {/* ── Header ─────────────────────────────────────────────────────── */}
+      <div>
+        <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white mb-1">Advanced Tools</h1>
+        <p className="text-[12px] sm:text-[13px] text-neutral-500">Specialized AI tools for complex document analysis and knowledge extraction.</p>
       </div>
 
-      {/* Featured Tool section */}
-      <section className="bg-gradient-to-tr from-primary/10 via-accent/5 to-purple-500/10 border border-white/10 rounded-[3rem] p-10 relative overflow-hidden group">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle,rgba(6,182,212,0.1)_0%,transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
-        <div className="max-w-3xl relative z-10">
-          <div className="w-16 h-16 rounded-[1.5rem] bg-white text-black flex items-center justify-center mb-8 shadow-2xl">
-            <Sparkles size={32} />
-          </div>
-          <h2 className="text-3xl md:text-4xl font-black text-white mb-4">Smart Synthesis Engine</h2>
-          <p className="text-lg text-neutral-300 font-medium mb-8 leading-relaxed">Our most powerful tool yet. It scans your entire library, identifies cross-document patterns, and builds a comprehensive knowledge graph of your research topics.</p>
-          <div className="flex flex-wrap gap-4">
-            <button className="px-8 py-4 bg-primary text-white rounded-2xl font-black shadow-2xl shadow-primary/30 hover:bg-primary-dark transition-all flex items-center gap-2 group/btn">
-              Start Synthesis
-              <Zap size={20} className="fill-white group-hover/btn:scale-125 transition-transform" />
-            </button>
-            <button className="px-8 py-4 bg-white/5 border border-white/10 rounded-2xl font-black hover:bg-white/10 transition-all">
-              Learn How it Works
-            </button>
-          </div>
+      {/* ── Tool grid ──────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        {tools.map((t, i) => <ToolCard key={i} {...t} onClick={goChat} />)}
+      </div>
+
+      {/* ── Featured banner ────────────────────────────────────────────── */}
+      <div className="relative bg-gradient-to-br from-violet-900/25 via-purple-900/15 to-[#0d0d1a] border border-violet-500/20 rounded-3xl p-6 sm:p-10 overflow-hidden">
+        {/* BG glow */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-0 w-[300px] sm:w-[400px] h-[200px] sm:h-[300px] bg-violet-600/10 blur-[60px] sm:blur-[80px]" />
+          <div className="absolute bottom-0 right-0 w-[200px] sm:w-[300px] h-[150px] sm:h-[200px] bg-purple-600/5 blur-[50px] sm:blur-[60px]" />
         </div>
-        <div className="absolute top-10 right-10 hidden lg:block opacity-20 pointer-events-none">
-          <div className="grid grid-cols-3 gap-2">
-            {[...Array(9)].map((_, i) => (
-              <div key={i} className="w-12 h-12 border border-white/20 rounded-lg flex items-center justify-center">
-                <div className="w-6 h-1 bg-white/20 rounded-full"></div>
-              </div>
+
+        {/* Decorative dots — desktop only */}
+        <div className="absolute top-8 right-8 hidden xl:grid grid-cols-3 gap-2 opacity-10">
+          {Array(9).fill(0).map((_, i) => (
+            <div key={i} className="w-10 h-10 border border-white/20 rounded-lg flex items-center justify-center">
+              <div className="w-4 h-0.5 bg-white/30 rounded-full" />
+            </div>
+          ))}
+        </div>
+
+        <div className="relative z-10 max-w-xl">
+          {/* Icon */}
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white flex items-center justify-center mb-5 sm:mb-6 shadow-2xl">
+            <Sparkles size={24} className="text-violet-600" />
+          </div>
+
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white mb-3">Smart Synthesis Engine</h2>
+          <p className="text-neutral-400 text-[13px] sm:text-[14px] leading-relaxed mb-5 sm:mb-6">
+            Our most powerful tool. It scans your entire document library, identifies cross-document patterns,
+            and builds a comprehensive knowledge graph of your research topics.
+          </p>
+
+          {/* Feature chips */}
+          <div className="flex flex-wrap gap-2 mb-6 sm:mb-8">
+            {['Cross-document analysis', 'Pattern detection', 'Knowledge graph', 'Auto-citations'].map((f, i) => (
+              <span key={i} className="flex items-center gap-1.5 text-[11px] sm:text-[12px] text-violet-300 bg-violet-500/[0.08] border border-violet-500/20 px-2.5 sm:px-3 py-1.5 rounded-full">
+                <CheckCircle2 size={10} /> {f}
+              </span>
             ))}
           </div>
+
+          {/* CTA buttons */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button onClick={goChat}
+              className="flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-bold px-5 sm:px-6 py-3 rounded-xl text-[13px] sm:text-[14px] transition-all shadow-xl shadow-violet-600/25">
+              Start Synthesis <Zap size={15} className="fill-white" />
+            </button>
+            <button className="flex items-center justify-center gap-2 bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-white font-semibold px-5 sm:px-6 py-3 rounded-xl text-[13px] sm:text-[14px] transition-all">
+              Learn More
+            </button>
+          </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 };

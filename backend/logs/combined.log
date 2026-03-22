@@ -1537,3 +1537,41 @@
 {"level":"info","message":"✅ File deleted from Drive + Qdrant via n8n (by name)","originalName":"UX-V2.pdf","service":"deep-research-backend","timestamp":"2026-03-23 01:22:41"}
 {"level":"info","message":"Upload deleted from MongoDB","service":"deep-research-backend","timestamp":"2026-03-23 01:22:41","uploadId":"69c0462065da7ea83cadf239","userId":"69c00e1a61d027d71fa7a36d"}
 {"level":"info","message":"\u001b[0mDELETE /api/v1/uploads/69c0462065da7ea83cadf239 \u001b[32m200\u001b[0m 3586.925 ms - 151\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 01:22:41"}
+{"level":"info","message":"Environment variables successfully validated","service":"deep-research-backend","timestamp":"2026-03-23 01:51:31"}
+{"level":"info","message":"🚀 Backend Server running on port 5000 in development mode","service":"deep-research-backend","timestamp":"2026-03-23 01:51:33"}
+{"level":"info","message":"📚 API Documentation: http://localhost:5000","service":"deep-research-backend","timestamp":"2026-03-23 01:51:33"}
+{"level":"info","message":"🏥 Health Check: http://localhost:5000/health","service":"deep-research-backend","timestamp":"2026-03-23 01:51:33"}
+{"count":31,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 01:56:38","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 245.006 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 01:56:38"}
+{"count":31,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 01:56:38","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 223.099 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 01:56:38"}
+{"count":31,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 01:56:38","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 145.760 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 01:56:38"}
+{"count":2,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 01:56:38","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[32m200\u001b[0m 691.120 ms - 383\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 01:56:38"}
+{"count":31,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 01:56:38","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 260.087 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 01:56:38"}
+{"count":2,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 01:56:38","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 150.381 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 01:56:38"}
+{"count":31,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 01:57:30","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 179.407 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 01:57:30"}
+{"count":31,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 01:57:30","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 172.431 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 01:57:30"}
+{"count":31,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 01:57:30","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 136.868 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 01:57:30"}
+{"count":31,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 01:57:30","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 134.398 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 01:57:30"}
+{"level":"info","message":"Environment variables successfully validated","service":"deep-research-backend","timestamp":"2026-03-23 01:59:33"}
+{"level":"info","message":"🚀 Backend Server running on port 5001 in development mode","service":"deep-research-backend","timestamp":"2026-03-23 01:59:35"}
+{"level":"info","message":"📚 API Documentation: http://localhost:5001","service":"deep-research-backend","timestamp":"2026-03-23 01:59:35"}
+{"level":"info","message":"🏥 Health Check: http://localhost:5001/health","service":"deep-research-backend","timestamp":"2026-03-23 01:59:35"}
+{"level":"info","message":"Received SIGINT. Starting graceful shutdown...","service":"deep-research-backend","timestamp":"2026-03-23 02:01:40"}
+{"level":"info","message":"Received SIGINT. Starting graceful shutdown...","service":"deep-research-backend","timestamp":"2026-03-23 02:01:53"}
+{"level":"info","message":"Environment variables successfully validated","service":"deep-research-backend","timestamp":"2026-03-23 02:01:57"}
+{"level":"info","message":"🚀 Backend Server running on port 5001 in development mode","service":"deep-research-backend","timestamp":"2026-03-23 02:01:59"}
+{"level":"info","message":"📚 API Documentation: http://localhost:5001","service":"deep-research-backend","timestamp":"2026-03-23 02:01:59"}
+{"level":"info","message":"🏥 Health Check: http://localhost:5001/health","service":"deep-research-backend","timestamp":"2026-03-23 02:01:59"}
+{"level":"info","message":"Environment variables successfully validated","service":"deep-research-backend","timestamp":"2026-03-23 02:03:02"}
+{"level":"info","message":"🚀 Backend Server running on port 5001 in development mode","service":"deep-research-backend","timestamp":"2026-03-23 02:03:04"}
+{"level":"info","message":"📚 API Documentation: http://localhost:5001","service":"deep-research-backend","timestamp":"2026-03-23 02:03:04"}
+{"level":"info","message":"🏥 Health Check: http://localhost:5001/health","service":"deep-research-backend","timestamp":"2026-03-23 02:03:04"}

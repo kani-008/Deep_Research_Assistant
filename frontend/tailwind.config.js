@@ -1,4 +1,6 @@
-// ./frontend/tailwind.config.js
+// tailwind.config.js
+import forms from '@tailwindcss/forms';
+import typography from '@tailwindcss/typography';
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -9,30 +11,39 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: '#0a0a0a',
-        surface: '#121212',
-        sidebar: '#171717',
+        background: '#050508',
+        surface: {
+          light: '#1a1a24',
+          DEFAULT: '#0d0d1a',
+          dark: '#08080f',
+        },
         primary: {
-          light: '#a5f3fc',
-          DEFAULT: '#06b6d4',
-          dark: '#0891b2',
+          light: '#c4b5fd',
+          DEFAULT: '#7c3aed',
+          dark: '#6d28d9',
+        },
+        secondary: {
+          light: '#99f6ff',
+          DEFAULT: '#0ea5e9',
+          dark: '#0284c7',
         },
         accent: {
-          light: '#e0e7ff',
-          DEFAULT: '#6366f1',
-          dark: '#4f46e5',
+          light: '#f5d0fe',
+          DEFAULT: '#d946ef',
+          dark: '#c026d3',
         },
-        chat: {
-          user: '#2f2f2f',
-          ai: '#1e1e1e',
-        }
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
+      },
+      boxShadow: {
+        'premium': '0 0 50px -12px rgba(124, 58, 237, 0.25)',
+        'glow': '0 0 20px -5px rgba(124, 58, 237, 0.5)',
       },
       animation: {
-        'fade-in': 'fadeIn 0.3s ease-out',
-        'slide-up': 'slideUp 0.3s ease-out',
+        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'fade-in': 'fadeIn 0.5s ease-out',
+        'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
       },
       keyframes: {
         fadeIn: {
@@ -40,11 +51,12 @@ export default {
           '100%': { opacity: '1' },
         },
         slideUp: {
-          '0%': { transform: 'translateY(10px)', opacity: '0' },
+          '0%': { transform: 'translateY(20px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
       },
     },
   },
-  plugins: [],
+  plugins: [forms, typography],
 }
+

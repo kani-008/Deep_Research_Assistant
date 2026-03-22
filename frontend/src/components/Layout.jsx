@@ -1,253 +1,471 @@
-// ./frontend/src/components/Layout.jsx
-
-import React, { useState, useEffect } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+// src/components/Layout.jsx
+import React, { useState, useEffect, useRef } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   Plus, MessageSquare, LayoutDashboard, Wrench, BarChart3,
-  Settings, LogOut, X, Search, Trash2, FileText, RefreshCw,
-  Menu,
+  Settings, LogOut, X, Search, Trash2, RefreshCw,
+  Menu, ChevronRight, Sparkles, User, Bell, Keyboard,
+  HelpCircle, ExternalLink, Moon, Shield, BookOpen,
+  ChevronUp, FileText, Zap, Volume2, Globe
 } from 'lucide-react';
 import { useChat } from '../context/ChatContext';
 import { useAuth } from '../context/AuthContext';
 
-// ─── Sidebar ──────────────────────────────────────────────────────────────────
+// ── Settings Panel ─────────────────────────────────────────────────────────────
+const SettingsPanel = ({ onClose, user, logout, navigate }) => {
+  const [notifications, setNotifications] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [compactMode, setCompactMode] = useState(false);
 
-const Sidebar = ({ isOpen, toggleSidebar }) => {
-  const {
-    sessions,
-    currentSessionId,
-    setCurrentSessionId,
-    createNewChat,
-    deleteSession,
-    loadSessions,
-    refreshSessions,
-  } = useChat();
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const [loadingSession, setLoadingSession] = useState(false);
-
-  // Load sessions from MongoDB Atlas on sidebar mount
-  useEffect(() => {
-    const init = async () => {
-      setLoadingSession(true);
-      await loadSessions();
-      setLoadingSession(false);
-    };
-    init();
-  }, [loadSessions]);
-
-  const handleNewChat = () => {
-    const id = createNewChat();
-    navigate(`/chat/${id}`);
-    if (window.innerWidth < 768) toggleSidebar();
+  const handleLogout = () => {
+    onClose();
+    logout();
+    navigate('/login');
   };
 
-  const handleSessionClick = (id) => {
-    setCurrentSessionId(id);
-    navigate(`/chat/${id}`);
-    if (window.innerWidth < 768) toggleSidebar();
-  };
+  const Toggle = ({ value, onChange }) => (
+    <button
+      onClick={() => onChange(!value)}
+      className={`relative w-8 h-4.5 rounded-full transition-all flex-shrink-0 ${
+        value ? 'bg-violet-600' : 'bg-white/[0.1]'
+      }`}
+      style={{ width: '32px', height: '18px' }}
+    >
+      <span className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow transition-all duration-200 ${
+        value ? 'left-[14px]' : 'left-0.5'
+      }`} />
+    </button>
+  );
 
-  const handleRefreshSessions = async () => {
-    refreshSessions();
-    setLoadingSession(true);
-    await loadSessions();
-    setLoadingSession(false);
-  };
+  const sections = [
+    {
+      label: 'Account',
+      items: [
+        {
+          icon: User,
+          label: 'Profile',
+          sub: user?.email || 'Manage your profile',
+          action: () => {},
+          right: <ExternalLink size={12} className="text-neutral-700" />,
+        },
+        {
+          icon: Shield,
+          label: 'Security',
+          sub: 'Password & 2FA',
+          action: () => {},
+          right: <ExternalLink size={12} className="text-neutral-700" />,
+        },
+        {
+          icon: Zap,
+          label: 'Upgrade Plan',
+          sub: 'You are on Free',
+          action: () => {},
+          right: (
+            <span className="text-[10px] font-bold bg-amber-400/10 text-amber-400 border border-amber-400/20 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+              PRO
+            </span>
+          ),
+        },
+      ],
+    },
+    {
+      label: 'Preferences',
+      items: [
+        {
+          icon: Bell,
+          label: 'Notifications',
+          sub: 'Upload & answer alerts',
+          action: () => setNotifications(p => !p),
+          right: <Toggle value={notifications} onChange={setNotifications} />,
+        },
+        {
+          icon: Volume2,
+          label: 'Sound effects',
+          sub: 'Play sounds on events',
+          action: () => setSoundEnabled(p => !p),
+          right: <Toggle value={soundEnabled} onChange={setSoundEnabled} />,
+        },
+        {
+          icon: Moon,
+          label: 'Compact mode',
+          sub: 'Denser sidebar layout',
+          action: () => setCompactMode(p => !p),
+          right: <Toggle value={compactMode} onChange={setCompactMode} />,
+        },
+      ],
+    },
+    {
+      label: 'Resources',
+      items: [
+        {
+          icon: BookOpen,
+          label: 'Documentation',
+          sub: 'Guides and API reference',
+          action: () => window.open('#', '_blank'),
+          right: <ExternalLink size={12} className="text-neutral-700" />,
+        },
+        {
+          icon: Keyboard,
+          label: 'Keyboard shortcuts',
+          sub: 'View all shortcuts',
+          action: () => {},
+          right: (
+            <span className="text-[10px] font-mono text-neutral-600 bg-white/[0.05] px-1.5 py-0.5 rounded border border-white/[0.06]">
+              ?
+            </span>
+          ),
+        },
+        {
+          icon: HelpCircle,
+          label: 'Help & Support',
+          sub: 'Chat with our team',
+          action: () => {},
+          right: <ExternalLink size={12} className="text-neutral-700" />,
+        },
+      ],
+    },
+  ];
 
   return (
-    <>
-      {/* Mobile overlay */}
-      {isOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={toggleSidebar} />
-      )}
-
-      <div
-        className={`
-          fixed md:relative z-50 h-screen bg-sidebar border-r border-white/5
-          flex flex-col transition-all duration-300 ease-in-out flex-shrink-0
-          ${isOpen ? 'w-[280px] translate-x-0' : 'w-0 md:w-0 -translate-x-full md:-translate-x-full'}
-          overflow-hidden
-        `}
-      >
-        {/* Logo */}
-        <div className="p-4 flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center font-bold text-white shadow-lg shadow-primary/20 flex-shrink-0">
-              D
-            </div>
-            <span className="font-bold text-lg text-white whitespace-nowrap">Deep Research</span>
+    <div className="absolute bottom-full left-0 right-0 mb-2 z-[60] mx-2">
+      {/* Panel */}
+      <div className="bg-[#0f0f1e] border border-white/[0.1] rounded-2xl shadow-2xl shadow-black/60 overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
+          <div className="flex items-center gap-2">
+            <Settings size={13} className="text-neutral-500" />
+            <span className="text-[12px] font-bold text-neutral-300 tracking-wide">Settings</span>
           </div>
-          <button
-            onClick={toggleSidebar}
-            className="p-1.5 hover:bg-white/10 rounded-lg text-neutral-400 hover:text-white transition-colors flex-shrink-0"
-          >
-            <X size={18} />
+          <button onClick={onClose}
+            className="p-1 hover:bg-white/[0.07] rounded-lg text-neutral-600 hover:text-neutral-300 transition-colors">
+            <X size={13} />
           </button>
         </div>
 
-        {/* New Chat button */}
-        <div className="px-4 mb-4 flex-shrink-0">
-          <button
-            onClick={handleNewChat}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all font-medium text-sm whitespace-nowrap"
-          >
-            <Plus size={18} />
-            <span>New Chat</span>
+        {/* User summary */}
+        <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center font-bold text-[12px] flex-shrink-0 ring-2 ring-violet-500/20">
+            {user?.name ? user.name.slice(0, 2).toUpperCase() : 'U'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-semibold text-white truncate">{user?.name || 'User'}</p>
+            <p className="text-[10px] text-neutral-500 truncate">{user?.email || ''}</p>
+          </div>
+          <span className="text-[9px] font-black uppercase tracking-widest text-neutral-600 bg-white/[0.05] border border-white/[0.07] px-2 py-1 rounded-full flex-shrink-0">
+            Free
+          </span>
+        </div>
+
+        {/* Sections */}
+        <div className="overflow-y-auto max-h-72 py-2">
+          {sections.map(({ label, items }) => (
+            <div key={label}>
+              <p className="text-[9px] font-bold text-neutral-700 uppercase tracking-[0.15em] px-4 pt-3 pb-1.5">{label}</p>
+              {items.map(({ icon: Icon, label: itemLabel, sub, action, right }) => (
+                <button key={itemLabel} onClick={action}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.04] transition-colors text-left group">
+                  <div className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center flex-shrink-0 group-hover:border-white/[0.1] transition-colors">
+                    <Icon size={13} className="text-neutral-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-medium text-neutral-200 truncate">{itemLabel}</p>
+                    <p className="text-[10px] text-neutral-600 truncate">{sub}</p>
+                  </div>
+                  <div className="flex-shrink-0">{right}</div>
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        {/* Footer — Sign out */}
+        <div className="border-t border-white/[0.06] px-3 py-2.5">
+          <button onClick={handleLogout}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-red-500/[0.08] border border-transparent hover:border-red-500/20 transition-all group">
+            <div className="w-7 h-7 rounded-lg bg-red-500/[0.08] flex items-center justify-center flex-shrink-0">
+              <LogOut size={13} className="text-red-500/70 group-hover:text-red-400 transition-colors" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-[12px] font-medium text-red-500/70 group-hover:text-red-400 transition-colors">Sign out</p>
+              <p className="text-[10px] text-neutral-700">End your session</p>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* Arrow pointer */}
+      <div className="absolute -bottom-1.5 left-6 w-3 h-3 bg-[#0f0f1e] border-r border-b border-white/[0.1] rotate-45 z-[-1]" />
+    </div>
+  );
+};
+
+// ── Sidebar ────────────────────────────────────────────────────────────────────
+const Sidebar = ({ isOpen, onClose }) => {
+  const { sessions, currentSessionId, setCurrentSessionId, createNewChat, deleteSession, loadSessions, refreshSessions } = useChat();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRef = useRef(null);
+
+  useEffect(() => {
+    (async () => { setLoading(true); await loadSessions(); setLoading(false); })();
+  }, [loadSessions]);
+
+  // Close settings panel when clicking outside
+  useEffect(() => {
+    const handler = (e) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target)) {
+        setSettingsOpen(false);
+      }
+    };
+    if (settingsOpen) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [settingsOpen]);
+
+  const go = (path) => {
+    navigate(path);
+    if (window.innerWidth < 1024) onClose();
+  };
+
+  const handleNewChat = () => {
+    const id = createNewChat();
+    go(`/chat/${id}`);
+  };
+
+  const handleRefresh = async () => {
+    refreshSessions();
+    setLoading(true);
+    await loadSessions();
+    setLoading(false);
+  };
+
+  const navItems = [
+    { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/tools', icon: Wrench, label: 'Tools' },
+    { to: '/analytics', icon: BarChart3, label: 'Analytics' },
+  ];
+
+  return (
+    <>
+      {/* Mobile backdrop */}
+      {isOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" onClick={onClose} />
+      )}
+
+      <aside
+        className={`
+          fixed inset-y-0 left-0 z-50 lg:relative
+          flex flex-col w-64 h-screen flex-shrink-0
+          bg-[#0a0a16] border-r border-white/[0.05]
+          transition-transform duration-300 ease-in-out
+          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+          lg:translate-x-0
+        `}
+      >
+        {/* Logo row */}
+        <div className="flex items-center justify-between px-4 py-4 border-b border-white/[0.04] flex-shrink-0">
+          <button onClick={() => navigate('/')} className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center font-black text-sm shadow-lg shadow-violet-500/20 flex-shrink-0">D</div>
+            <span className="font-extrabold text-[13px] tracking-tight text-white/90 truncate">Deep Research</span>
+          </button>
+          <button onClick={onClose} className="p-1.5 hover:bg-white/[0.07] rounded-lg text-neutral-600 hover:text-white transition-colors lg:hidden flex-shrink-0">
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* New Chat */}
+        <div className="px-3 pt-3 pb-2 flex-shrink-0">
+          <button onClick={handleNewChat}
+            className="w-full flex items-center justify-center gap-2 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-[13px] font-semibold rounded-xl transition-all shadow-lg shadow-violet-600/15">
+            <Plus size={15} /> New Chat
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto px-2 space-y-1 custom-scrollbar">
-          <div className="px-2 py-2 text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-            Navigation
-          </div>
-          <NavLink to="/dashboard" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}>
-            <LayoutDashboard size={18} className="flex-shrink-0" />
-            <span className="whitespace-nowrap">Dashboard</span>
-          </NavLink>
-          <NavLink to="/tools" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}>
-            <Wrench size={18} className="flex-shrink-0" />
-            <span className="whitespace-nowrap">Advanced Tools</span>
-          </NavLink>
-          <NavLink to="/analytics" className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}>
-            <BarChart3 size={18} className="flex-shrink-0" />
-            <span className="whitespace-nowrap">Analytics</span>
-          </NavLink>
-
-          {/* Recent chats — from MongoDB Atlas */}
-          <div className="mt-6 px-2 py-2 flex items-center justify-between">
-            <span className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
-              Recent Chats
-            </span>
-            <button
-              onClick={handleRefreshSessions}
-              className="p-1 hover:bg-white/10 rounded text-neutral-600 hover:text-neutral-400 transition-colors"
-              title="Refresh from database"
+        <nav className="px-3 pb-3 border-b border-white/[0.04] flex-shrink-0">
+          <p className="text-[10px] font-bold text-neutral-700 uppercase tracking-[0.15em] px-2 py-2">Navigation</p>
+          {navItems.map(({ to, icon: Icon, label }) => (
+            <NavLink
+              key={to} to={to}
+              onClick={() => { if (window.innerWidth < 1024) onClose(); }}
+              className={({ isActive }) =>
+                `flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all mb-0.5 ${
+                  isActive
+                    ? 'bg-violet-500/10 text-violet-300 ring-1 ring-violet-500/20'
+                    : 'text-neutral-500 hover:bg-white/[0.04] hover:text-neutral-300'
+                }`
+              }
             >
-              <RefreshCw size={12} className={loadingSession ? 'animate-spin' : ''} />
-            </button>
-          </div>
-
-          <div className="space-y-1">
-            {loadingSession ? (
-              <div className="px-2 py-4 text-center">
-                <RefreshCw size={14} className="mx-auto animate-spin text-neutral-600 mb-1" />
-                <p className="text-xs text-neutral-600">Loading chats…</p>
-              </div>
-            ) : sessions.length > 0 ? (
-              sessions.map((session) => (
-                <div
-                  key={session.sessionId}
-                  className={`group flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${
-                    currentSessionId === session.sessionId
-                      ? 'bg-white/10 text-white'
-                      : 'text-neutral-400 hover:bg-white/5 hover:text-white'
-                  }`}
-                  onClick={() => handleSessionClick(session.sessionId)}
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <MessageSquare size={16} className="flex-shrink-0" />
-                    <span className="text-sm truncate font-medium">{session.title}</span>
-                  </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); deleteSession(session.sessionId); }}
-                    className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 text-neutral-500 transition-opacity flex-shrink-0 ml-1"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              ))
-            ) : (
-              <div className="px-2 py-4 text-center text-xs text-neutral-600">
-                No recent chats
-              </div>
-            )}
-          </div>
+              <Icon size={16} className="flex-shrink-0" />
+              {label}
+            </NavLink>
+          ))}
         </nav>
 
-        {/* User footer */}
-        <div className="flex-shrink-0 p-4 border-t border-white/5">
-          <div className="flex items-center gap-2 p-2 rounded-xl hover:bg-white/5 transition-colors">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-accent flex items-center justify-center font-semibold text-white flex-shrink-0">
-              {user?.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">{user?.name || user?.email || 'User'}</p>
-              <p className="text-xs text-neutral-500">Free Plan</p>
-            </div>
-            <button
-              onClick={() => { logout(); navigate('/login'); }}
-              className="p-1.5 hover:bg-white/10 rounded-lg hover:text-red-400 text-neutral-500 transition-colors flex-shrink-0"
-              title="Logout"
-            >
-              <LogOut size={16} />
-            </button>
-            <button className="p-1.5 hover:bg-white/10 rounded-lg hover:text-white text-neutral-500 transition-colors flex-shrink-0">
-              <Settings size={16} />
+        {/* Recent chats */}
+        <div className="flex-1 overflow-y-auto px-3 py-3 min-h-0">
+          <div className="flex items-center justify-between px-2 mb-2">
+            <p className="text-[10px] font-bold text-neutral-700 uppercase tracking-[0.15em]">Recent Chats</p>
+            <button onClick={handleRefresh} className="p-1 hover:bg-white/[0.05] rounded-lg text-neutral-700 hover:text-neutral-500 transition-colors">
+              <RefreshCw size={11} className={loading ? 'animate-spin' : ''} />
             </button>
           </div>
+          {loading ? (
+            <div className="flex flex-col items-center py-8 gap-2">
+              <RefreshCw size={14} className="animate-spin text-neutral-700" />
+              <p className="text-[11px] text-neutral-700">Loading…</p>
+            </div>
+          ) : sessions.length > 0 ? (
+            <div className="space-y-0.5">
+              {sessions.map(s => (
+                <div
+                  key={s.sessionId}
+                  onClick={() => { setCurrentSessionId(s.sessionId); go(`/chat/${s.sessionId}`); }}
+                  className={`group flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${
+                    currentSessionId === s.sessionId
+                      ? 'bg-white/[0.07] text-white'
+                      : 'text-neutral-500 hover:bg-white/[0.04] hover:text-neutral-300'
+                  }`}
+                >
+                  <MessageSquare size={12} className="flex-shrink-0" />
+                  <span className="text-[12px] truncate flex-1 font-medium">{s.title}</span>
+                  <button
+                    onClick={e => { e.stopPropagation(); deleteSession(s.sessionId); }}
+                    className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 transition-all flex-shrink-0 rounded">
+                    <Trash2 size={11} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-[11px] text-neutral-700 py-8">No chats yet</p>
+          )}
         </div>
-      </div>
+
+        {/* ── User footer with Settings Panel ─────────────────────────── */}
+        <div className="flex-shrink-0 px-3 py-3 border-t border-white/[0.04] relative" ref={settingsRef}>
+
+          {/* Settings panel — renders above the footer */}
+          {settingsOpen && (
+            <SettingsPanel
+              onClose={() => setSettingsOpen(false)}
+              user={user}
+              logout={logout}
+              navigate={navigate}
+            />
+          )}
+
+          {/* User row */}
+          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-white/[0.08] transition-colors">
+            {/* Avatar */}
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center font-bold text-[11px] flex-shrink-0 ring-2 ring-violet-500/20">
+              {user?.name ? user.name.slice(0, 2).toUpperCase() : 'U'}
+            </div>
+
+            {/* Name + plan */}
+            <div className="flex-1 min-w-0">
+              <p className="text-[12px] font-semibold text-white truncate leading-tight">
+                {user?.name || user?.email || 'User'}
+              </p>
+              <p className="text-[10px] text-neutral-600 leading-tight">Free Plan</p>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-0.5 flex-shrink-0">
+              {/* Sign out */}
+              <button
+                onClick={() => { logout(); navigate('/login'); }}
+                className="p-1.5 hover:bg-red-500/10 rounded-lg text-neutral-600 hover:text-red-400 transition-all"
+                title="Sign out">
+                <LogOut size={14} />
+              </button>
+
+              {/* Settings toggle */}
+              <button
+                onClick={() => setSettingsOpen(p => !p)}
+                className={`p-1.5 rounded-lg transition-all ${
+                  settingsOpen
+                    ? 'bg-violet-500/15 text-violet-400 ring-1 ring-violet-500/25'
+                    : 'text-neutral-600 hover:bg-white/[0.07] hover:text-neutral-300'
+                }`}
+                title="Settings">
+                <Settings size={14} className={settingsOpen ? 'rotate-45 transition-transform duration-300' : 'transition-transform duration-300'} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </aside>
     </>
   );
 };
 
-// ─── Header ───────────────────────────────────────────────────────────────────
+// ── Header ─────────────────────────────────────────────────────────────────────
+const Header = ({ onToggle }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
 
-const Header = ({ toggleSidebar }) => (
-  <header className="h-16 border-b border-white/5 bg-background/50 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between px-4 md:px-6 flex-shrink-0">
-    <div className="flex items-center gap-3">
-      <button
-        onClick={toggleSidebar}
-        className="p-2 hover:bg-white/5 rounded-lg transition-colors text-neutral-400 hover:text-white"
-        title="Toggle sidebar"
-      >
-        <Menu size={20} />
-      </button>
-      <div className="relative group hidden sm:block">
-        <Search
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 group-focus-within:text-primary transition-colors"
-          size={16}
-        />
-        <input
-          type="text"
-          placeholder="Search documents or chats…"
-          className="bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary w-56 lg:w-96 transition-all"
-        />
+  const crumb = () => {
+    const p = location.pathname;
+    if (p.startsWith('/chat')) return 'Chat';
+    if (p === '/dashboard') return 'Dashboard';
+    if (p === '/tools') return 'Tools';
+    if (p === '/analytics') return 'Analytics';
+    return '';
+  };
+
+  return (
+    <header className="h-14 border-b border-white/[0.05] bg-[#07070f]/80 backdrop-blur-xl sticky top-0 z-30 flex items-center justify-between px-3 sm:px-4 flex-shrink-0">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <button onClick={onToggle}
+          className="p-2 hover:bg-white/[0.06] rounded-xl transition-colors text-neutral-500 hover:text-white flex-shrink-0">
+          <Menu size={18} />
+        </button>
+        <div className="hidden sm:flex items-center gap-1.5 text-[13px] min-w-0">
+          <span className="text-neutral-700 truncate">Deep Research</span>
+          <ChevronRight size={12} className="text-neutral-700 flex-shrink-0" />
+          <span className="text-neutral-300 font-medium truncate">{crumb()}</span>
+        </div>
+        <span className="sm:hidden text-[13px] font-semibold text-neutral-300 truncate">{crumb()}</span>
       </div>
-    </div>
-    <div className="flex items-center gap-3">
-      <button className="p-2 hover:bg-white/5 rounded-full transition-colors relative">
-        <div className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full ring-2 ring-background" />
-        <FileText size={20} className="text-neutral-400" />
-      </button>
-      <div className="w-px h-6 bg-white/10" />
-      <button className="text-sm font-medium hover:text-white text-neutral-400 transition-colors">Help</button>
-    </div>
-  </header>
-);
 
-// ─── Layout ───────────────────────────────────────────────────────────────────
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="relative hidden md:block">
+          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-600 pointer-events-none" />
+          <input type="text" placeholder="Search…"
+            className="bg-white/[0.04] border border-white/[0.07] rounded-xl pl-8 pr-4 py-1.5 text-[12px] text-neutral-400 placeholder:text-neutral-700 outline-none focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/10 transition-all w-44 lg:w-60" />
+        </div>
+        <button onClick={() => navigate('/chat')}
+          className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-white text-[12px] font-semibold px-3 py-2 rounded-xl transition-all shadow-md shadow-violet-600/20">
+          <Sparkles size={13} />
+          <span className="hidden sm:inline">Ask AI</span>
+        </button>
+      </div>
+    </header>
+  );
+};
 
+// ── Layout ─────────────────────────────────────────────────────────────────────
 const Layout = ({ children }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768) setIsSidebarOpen(false);
-      else setIsSidebarOpen(true);
+    const fn = () => {
+      setSidebarOpen(window.innerWidth >= 1024);
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    fn();
+    window.addEventListener('resize', fn);
+    return () => window.removeEventListener('resize', fn);
   }, []);
 
   return (
-    <div className="flex h-screen bg-background text-neutral-200 overflow-hidden font-sans">
-      <Sidebar isOpen={isSidebarOpen} toggleSidebar={() => setIsSidebarOpen((p) => !p)} />
+    <div className="flex h-screen bg-[#07070f] text-neutral-200 overflow-hidden">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Header toggleSidebar={() => setIsSidebarOpen((p) => !p)} />
-        <main className="flex-1 overflow-y-auto custom-scrollbar">{children}</main>
+        <Header onToggle={() => setSidebarOpen(p => !p)} />
+        <main className="flex-1 overflow-y-auto overscroll-contain">
+          {children}
+        </main>
       </div>
     </div>
   );
