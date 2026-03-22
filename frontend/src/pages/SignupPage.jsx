@@ -15,7 +15,7 @@ const StrengthDots = ({ password }) => {
       {[0, 1, 2, 3].map(i => (
         <div key={i} className={`h-1 flex-1 rounded-full transition-all ${i < score ? colors[score - 1] : 'bg-white/[0.07]'}`} />
       ))}
-      <span className="text-[10px] text-neutral-600 ml-1 whitespace-nowrap">
+      <span className="text-[0.65rem] text-neutral-600 ml-1 whitespace-nowrap">
         {['', 'Weak', 'Fair', 'Good', 'Strong'][score]}
       </span>
     </div>
@@ -75,9 +75,9 @@ const SignupPage = () => {
             Create your free account and start extracting knowledge in minutes.
           </p>
           <div className="bg-[#0e0e1c] border border-white/[0.07] rounded-2xl p-5 space-y-3">
-            <p className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest">Free plan includes</p>
+            <p className="text-[0.65rem] font-bold text-neutral-600 uppercase tracking-widest">Free plan includes</p>
             {['Unlimited PDF uploads', 'AI chat with citations', 'Multi-document search', 'Analytics dashboard'].map((f, i) => (
-              <div key={i} className="flex items-center gap-3 text-[13px] text-neutral-400">
+              <div key={i} className="flex items-center gap-3 text-sm text-neutral-400">
                 <CheckCircle2 size={14} className="text-emerald-400 flex-shrink-0" />
                 {f}
               </div>
@@ -100,7 +100,7 @@ const SignupPage = () => {
           </div>
 
           {error && (
-            <div className="flex items-start gap-2.5 bg-red-500/[0.08] border border-red-500/20 text-red-400 text-[13px] rounded-xl px-4 py-3 mb-5">
+            <div className="flex items-start gap-2.5 bg-red-500/[0.08] border border-red-500/20 text-red-400 text-sm rounded-xl px-4 py-3 mb-5">
               <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
@@ -109,39 +109,39 @@ const SignupPage = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Name */}
             <div>
-              <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-1.5">Full Name</label>
+              <label className="block text-[0.7rem] font-bold text-neutral-500 uppercase tracking-wider mb-1.5">Full Name</label>
               <div className="relative group">
                 <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-600 group-focus-within:text-violet-400 transition-colors pointer-events-none" />
                 <input
                   type="text" value={name} onChange={e => setName(e.target.value)}
                   placeholder="Jane Smith" autoComplete="name"
-                  className="w-full bg-[#0e0e1c] border border-white/[0.08] focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/10 rounded-xl pl-10 pr-4 py-3 text-[13px] text-white placeholder:text-neutral-700 outline-none transition-all"
+                  className="w-full bg-[#0e0e1c] border border-white/[0.08] focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-neutral-700 outline-none transition-all"
                 />
               </div>
             </div>
 
             {/* Email */}
             <div>
-              <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-1.5">Email Address</label>
+              <label className="block text-[0.7rem] font-bold text-neutral-500 uppercase tracking-wider mb-1.5">Email Address</label>
               <div className="relative group">
                 <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-600 group-focus-within:text-violet-400 transition-colors pointer-events-none" />
                 <input
                   type="email" value={email} onChange={e => setEmail(e.target.value)}
                   placeholder="you@company.com" autoComplete="email"
-                  className="w-full bg-[#0e0e1c] border border-white/[0.08] focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/10 rounded-xl pl-10 pr-4 py-3 text-[13px] text-white placeholder:text-neutral-700 outline-none transition-all"
+                  className="w-full bg-[#0e0e1c] border border-white/[0.08] focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-neutral-700 outline-none transition-all"
                 />
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-1.5">Password</label>
+              <label className="block text-[0.7rem] font-bold text-neutral-500 uppercase tracking-wider mb-1.5">Password</label>
               <div className="relative group">
                 <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-600 group-focus-within:text-violet-400 transition-colors pointer-events-none" />
                 <input
                   type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
                   placeholder="Min. 8 characters" autoComplete="new-password"
-                  className="w-full bg-[#0e0e1c] border border-white/[0.08] focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/10 rounded-xl pl-10 pr-10 py-3 text-[13px] text-white placeholder:text-neutral-700 outline-none transition-all"
+                  className="w-full bg-[#0e0e1c] border border-white/[0.08] focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/10 rounded-xl pl-10 pr-10 py-3 text-sm text-white placeholder:text-neutral-700 outline-none transition-all"
                 />
                 <button type="button" onClick={() => setShowPass(p => !p)}
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-neutral-400 transition-colors p-0.5">
@@ -152,7 +152,7 @@ const SignupPage = () => {
             </div>
 
             {/* Terms */}
-            <p className="text-[11px] text-neutral-600 leading-relaxed">
+            <p className="text-[0.7rem] text-neutral-600 leading-relaxed">
               By creating an account you agree to our{' '}
               <a href="#" className="text-neutral-500 hover:text-neutral-300 underline underline-offset-2">Terms</a>
               {' '}and{' '}
@@ -168,7 +168,7 @@ const SignupPage = () => {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-[13px] text-neutral-600">
+          <p className="mt-6 text-center text-sm text-neutral-600">
             Already have an account?{' '}
             <Link to="/login" className="text-violet-400 hover:text-violet-300 font-semibold transition-colors">Sign in</Link>
           </p>

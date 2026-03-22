@@ -9,6 +9,7 @@ import {
   deleteDocument as deleteDocumentApi,
   fetchUploadHistory,
   fetchChatHistory,
+  sendMessage as sendMessageApi
 } from '../api/api';
 import toast from 'react-hot-toast';
 
@@ -210,6 +211,10 @@ export const ChatProvider = ({ children }) => {
 
   const refreshDocuments = useCallback(() => setDocsLoaded(false), []);
 
+  const sendMessage = useCallback(async (message, sessionId) => {
+    return await sendMessageApi(message, sessionId);
+  }, []);
+
   // ═══════════════════════════════════════════════════════════════════════════
   // HELPERS
   // ═══════════════════════════════════════════════════════════════════════════
@@ -238,6 +243,7 @@ export const ChatProvider = ({ children }) => {
         deleteDocument,
         loadDocuments,
         refreshDocuments,
+        sendMessage,
       }}
     >
       {children}

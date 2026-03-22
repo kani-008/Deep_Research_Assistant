@@ -1,38 +1,24 @@
-// src/pages/AnalyticsPage.jsx
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar
 } from 'recharts';
 import {
   TrendingUp, TrendingDown, BarChart3, Clock, Zap, Layers,
-  Download, Share2, CheckCircle, ChevronRight, FileText
+  Download, Share2, CheckCircle, ChevronRight, FileText, Database,
+  Loader2
 } from 'lucide-react';
-
-const weekData = [
-  { day: 'Mon', queries: 12, docs: 2, tokens: 450 },
-  { day: 'Tue', queries: 18, docs: 4, tokens: 920 },
-  { day: 'Wed', queries: 15, docs: 1, tokens: 730 },
-  { day: 'Thu', queries: 25, docs: 5, tokens: 1200 },
-  { day: 'Fri', queries: 22, docs: 3, tokens: 850 },
-  { day: 'Sat', queries: 10, docs: 0, tokens: 300 },
-  { day: 'Sun', queries: 14, docs: 2, tokens: 550 },
-];
-
-const fileTypes = [
-  { name: 'PDF', value: 45, color: '#7c6af7' },
-  { name: 'DOCX', value: 25, color: '#22d3ee' },
-  { name: 'TXT', value: 15, color: '#a78bfa' },
-  { name: 'Other', value: 15, color: '#10b981' },
-];
+import { fetchAnalyticsDataApi } from '../api/api';
+import toast from 'react-hot-toast';
 
 const Tip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-[#0e0e1c] border border-white/[0.1] rounded-xl px-3 py-2.5 shadow-2xl">
-      <p className="text-[10px] text-neutral-500 mb-1.5 uppercase tracking-wider font-bold">{label}</p>
+    <div className="bg-[#0e0e1c] border border-white/[0.1] rounded-xl px-3 py-2.5 shadow-2xl backdrop-blur-xl">
+      <p className="text-[0.65rem] text-neutral-500 mb-1.5 uppercase tracking-widest font-black">{label}</p>
       {payload.map((p, i) => (
-        <p key={i} className="text-[11px] sm:text-[12px] font-semibold" style={{ color: p.color }}>
+        <p key={i} className="text-[11px] font-bold flex items-center gap-2" style={{ color: p.color }}>
+          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: p.color }} />
           {p.name}: {p.value}
         </p>
       ))}
@@ -41,16 +27,17 @@ const Tip = ({ active, payload, label }) => {
 };
 
 const StatCard = ({ title, value, change, icon: Icon, accent, bg, ring }) => (
-  <div className="bg-[#0d0d1a] border border-white/[0.06] rounded-2xl p-4 sm:p-5 flex items-center gap-3 hover:border-white/[0.1] transition-all group">
-    <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl ${bg} ring-1 ${ring} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
-      <Icon size={17} className={accent} />
+  <div className="bg-[#0d0d1a] border border-white/[0.06] rounded-2xl p-4 sm:p-5 flex items-center gap-4 hover:border-violet-500/20 transition-all group relative overflow-hidden">
+    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+    <div className={`w-11 h-11 rounded-xl ${bg} ring-1 ${ring} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300`}>
+      <Icon size={18} className={accent} />
     </div>
     <div className="flex-1 min-w-0">
-      <p className="text-[10px] sm:text-[11px] font-bold text-neutral-600 uppercase tracking-wider mb-0.5 truncate">{title}</p>
+      <p className="text-[10px] sm:text-[11px] font-black text-neutral-600 uppercase tracking-widest mb-1 truncate">{title}</p>
       <p className="text-xl sm:text-2xl font-black text-white tracking-tight leading-none">{value}</p>
     </div>
     {change !== undefined && (
-      <span className={`flex items-center gap-0.5 text-[10px] sm:text-[11px] font-bold px-1.5 sm:px-2 py-1 rounded-lg flex-shrink-0 ${
+      <span className={`flex items-center gap-0.5 text-[10px] font-black px-2 py-1 rounded-lg flex-shrink-0 ${
         change >= 0 ? 'text-emerald-400 bg-emerald-500/10' : 'text-red-400 bg-red-500/10'
       }`}>
         {change >= 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
@@ -61,49 +48,106 @@ const StatCard = ({ title, value, change, icon: Icon, accent, bg, ring }) => (
 );
 
 const AnalyticsPage = () => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [range, setRange] = useState('7d');
 
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetchAnalyticsDataApi();
+        if (res.success) {
+          setData(res.data);
+        }
+      } catch (err) {
+        toast.error('Cloud DB sync failed');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  // ── Transform Backend Data for Charts ──────────────────────────────────────────
+  
+  const chartData = useMemo(() => {
+    if (!data?.activity) return [];
+    
+    // Fill in last 7 days even if no data exists in DB
+    const days = [...Array(7)].map((_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const iso = d.toISOString().split('T')[0];
+      const entry = data.activity.find(a => a._id === iso);
+      const upload = data.uploads?.find(u => u._id === iso);
+      
+      return {
+        date: d.toLocaleDateString('en-US', { weekday: 'short' }),
+        queries: entry?.queries || 0,
+        docs: upload?.count || 0,
+        tokens: entry?.tokens || 0
+      };
+    }).reverse();
+    
+    return days;
+  }, [data]);
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] gap-3">
+        <Loader2 size={32} className="text-violet-500 animate-spin" />
+        <p className="text-xs font-black text-neutral-600 uppercase tracking-widest">Syncing with Cloud DB...</p>
+      </div>
+    );
+  }
+
+  const { stats, fileTypes, recent } = data || { stats: {}, fileTypes: [], recent: [] };
+
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-5 py-6 sm:py-8 pb-16 space-y-5 sm:space-y-7">
+    <div className="max-w-6xl mx-auto px-4 sm:px-5 py-8 sm:py-10 pb-20 space-y-8 sm:space-y-10">
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-5">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">Analytics</h1>
-          <p className="text-[12px] sm:text-[13px] text-neutral-600 mt-0.5">Performance metrics and usage statistics.</p>
+          <div className="flex items-center gap-2 mb-1">
+             <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+             <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Connected to Cloud DB</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">Advanced Insights</h1>
+          <p className="text-sm text-neutral-600 font-medium">Aggregated data stream from Research cluster.</p>
         </div>
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <button className="flex items-center gap-1.5 text-[12px] text-neutral-400 border border-white/[0.08] hover:border-white/[0.15] bg-transparent hover:bg-white/[0.04] px-3 py-2 rounded-xl transition-all font-medium">
-            <Download size={13} /> <span className="hidden sm:inline">Export</span>
+        <div className="flex items-center gap-3">
+          <button className="flex items-center gap-2 text-xs font-black text-neutral-400 border border-white/[0.08] hover:border-violet-500/30 hover:bg-white/[0.04] px-4 py-2.5 rounded-xl transition-all uppercase tracking-widest">
+            <Download size={14} /> Export
           </button>
-          <button className="flex items-center gap-1.5 text-[12px] text-white bg-violet-600 hover:bg-violet-500 px-3 py-2 rounded-xl transition-all font-semibold shadow-lg shadow-violet-600/20">
-            <Share2 size={13} /> <span className="hidden sm:inline">Share</span>
+          <button onClick={() => window.location.reload()} className="flex items-center gap-2 text-xs font-black text-white bg-violet-600 hover:bg-violet-500 px-4 py-2.5 rounded-xl transition-all shadow-xl shadow-violet-600/30 uppercase tracking-widest active:scale-95">
+            <RotateCcw size={14} /> Refresh
           </button>
         </div>
       </div>
 
       {/* ── Stat cards ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-        <StatCard title="Total Queries" value="1,284" change={12} icon={BarChart3} accent="text-violet-400" bg="bg-violet-500/10" ring="ring-violet-500/15" />
-        <StatCard title="Docs Indexed" value="87" change={24} icon={Layers} accent="text-cyan-400" bg="bg-cyan-500/10" ring="ring-cyan-500/15" />
-        <StatCard title="Topics Found" value="412" change={-4} icon={Zap} accent="text-amber-400" bg="bg-amber-500/10" ring="ring-amber-500/15" />
-        <StatCard title="Avg Response" value="1.4s" change={8} icon={Clock} accent="text-emerald-400" bg="bg-emerald-500/10" ring="ring-emerald-500/15" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Total Queries" value={stats.queries?.toLocaleString()} change={15} icon={BarChart3} accent="text-violet-400" bg="bg-violet-500/10" ring="ring-violet-500/15" />
+        <StatCard title="Docs Managed" value={stats.docs?.toLocaleString()} change={5} icon={Layers} accent="text-cyan-400" bg="bg-cyan-500/10" ring="ring-cyan-500/15" />
+        <StatCard title="Context Points" value={stats.topics?.toLocaleString()} change={12} icon={Zap} accent="text-amber-400" bg="bg-amber-500/10" ring="ring-amber-500/15" />
+        <StatCard title="Cluster Latency" value={stats.response} change={-2} icon={Clock} accent="text-emerald-400" bg="bg-emerald-500/10" ring="ring-emerald-500/15" />
       </div>
 
       {/* ── Charts row ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {/* Area chart — full width on mobile, 2/3 on lg */}
-        <div className="lg:col-span-2 bg-[#0d0d1a] border border-white/[0.06] rounded-2xl p-4 sm:p-6">
-          <div className="flex items-start justify-between mb-4 sm:mb-6 gap-3 flex-wrap">
+        {/* Area chart */}
+        <div className="lg:col-span-2 bg-[#0d0d1a] border border-white/[0.06] rounded-[2rem] p-6 lg:p-8 relative">
+          <div className="flex items-start justify-between mb-8 flex-wrap gap-4 relative z-10">
             <div>
-              <h2 className="font-bold text-white text-[14px] sm:text-[15px]">Research Activity</h2>
-              <p className="text-[11px] sm:text-[12px] text-neutral-600 mt-0.5">Queries vs document uploads</p>
+              <h2 className="font-black text-white text-lg">Cloud Activity Stream</h2>
+              <p className="text-xs text-neutral-600 font-bold uppercase tracking-widest mt-1">Daily interaction density</p>
             </div>
-            <div className="flex items-center gap-1 bg-[#0a0a14] border border-white/[0.06] rounded-xl p-1 flex-shrink-0">
-              {['7d', '30d', '90d'].map(r => (
+            <div className="flex items-center gap-1 bg-[#0a0a14] border border-white/[0.06] rounded-2xl p-1">
+              {['7d', '30d'].map(r => (
                 <button key={r} onClick={() => setRange(r)}
-                  className={`text-[10px] sm:text-[11px] font-bold px-2.5 sm:px-3 py-1.5 rounded-lg transition-all ${
+                  className={`text-[11px] font-black px-4 py-2 rounded-xl transition-all uppercase tracking-widest ${
                     range === r ? 'bg-violet-600 text-white' : 'text-neutral-600 hover:text-neutral-300'
                   }`}>
                   {r}
@@ -112,134 +156,127 @@ const AnalyticsPage = () => {
             </div>
           </div>
 
-          <div className="h-48 sm:h-56">
+          <div className="h-64 sm:h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={weekData} margin={{ top: 0, right: 0, left: -24, bottom: 0 }}>
+              <AreaChart data={chartData} margin={{ top: 0, right: 0, left: -24, bottom: 0 }}>
                 <defs>
                   <linearGradient id="gQ" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7c6af7" stopOpacity={0.25} />
+                    <stop offset="5%" stopColor="#7c6af7" stopOpacity={0.4} />
                     <stop offset="95%" stopColor="#7c6af7" stopOpacity={0} />
                   </linearGradient>
-                  <linearGradient id="gD" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#22d3ee" stopOpacity={0} />
-                  </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.04)" />
-                <XAxis dataKey="day" stroke="transparent" tick={{ fill: '#4b4b5e', fontSize: 10 }} tickLine={false} />
-                <YAxis stroke="transparent" tick={{ fill: '#4b4b5e', fontSize: 10 }} tickLine={false} axisLine={false} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
+                <XAxis dataKey="date" stroke="transparent" tick={{ fill: '#4b4b5e', fontSize: 11, fontWeight: 700 }} tickLine={false} />
+                <YAxis stroke="transparent" tick={{ fill: '#4b4b5e', fontSize: 11, fontWeight: 700 }} tickLine={false} axisLine={false} />
                 <Tooltip content={<Tip />} />
-                <Area type="monotone" dataKey="queries" name="Queries" stroke="#7c6af7" strokeWidth={2} fill="url(#gQ)" dot={false} />
-                <Area type="monotone" dataKey="docs" name="Docs" stroke="#22d3ee" strokeWidth={2} fill="url(#gD)" dot={false} />
+                <Area type="monotone" dataKey="queries" name="Queries" stroke="#7c6af7" strokeWidth={3} fill="url(#gQ)" dot={{ fill: '#7c6af7', r: 4, stroke: '#0d0d1a' }} />
+                <Area type="monotone" dataKey="docs" name="Uploads" stroke="#22d3ee" strokeWidth={3} fill="none" dot={false} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
-
-          <div className="flex items-center gap-4 sm:gap-5 mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-white/[0.05] flex-wrap">
-            {[
-              { dot: 'bg-violet-500', label: 'Queries', val: '116 this week' },
-              { dot: 'bg-cyan-500', label: 'Uploads', val: '17 this week' },
-            ].map(({ dot, label, val }, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${dot} flex-shrink-0`} />
-                <span className="text-[11px] sm:text-[12px] text-neutral-500">{label}</span>
-                <span className="text-[11px] sm:text-[12px] font-semibold text-white">{val}</span>
-              </div>
-            ))}
-          </div>
         </div>
 
-        {/* Side column */}
-        <div className="flex flex-col gap-4 sm:gap-5">
-          {/* Pie chart */}
-          <div className="bg-[#0d0d1a] border border-white/[0.06] rounded-2xl p-4 sm:p-6 flex-1">
-            <h2 className="font-bold text-white text-[14px] sm:text-[15px] mb-0.5">File Types</h2>
-            <p className="text-[11px] sm:text-[12px] text-neutral-600 mb-3 sm:mb-4">Document composition</p>
-            <div className="h-32 sm:h-36">
+        {/* Side stats */}
+        <div className="flex flex-col gap-6">
+          <div className="bg-[#0d0d1a] border border-white/[0.06] rounded-[2rem] p-6 flex-1 relative overflow-hidden">
+            <h2 className="font-black text-white text-base">Resource Map</h2>
+            <p className="text-[11px] text-neutral-600 font-bold uppercase tracking-widest mt-1 mb-6">File Type distribution</p>
+            
+            <div className="h-40 relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={fileTypes} cx="50%" cy="50%" innerRadius={38} outerRadius={56} paddingAngle={4} dataKey="value">
+                  <Pie data={fileTypes} cx="50%" cy="50%" innerRadius={45} outerRadius={65} paddingAngle={8} dataKey="value" stroke="none">
                     {fileTypes.map((e, i) => <Cell key={i} fill={e.color} />)}
                   </Pie>
                   <Tooltip content={<Tip />} />
                 </PieChart>
               </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-xl font-black text-white leading-none">{stats.docs}</span>
+                <span className="text-[9px] text-neutral-600 uppercase font-black tracking-widest mt-1">Files</span>
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-y-2 gap-x-3 mt-3">
+
+            <div className="space-y-2 mt-4">
               {fileTypes.map((f, i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: f.color }} />
-                    <span className="text-[11px] sm:text-[12px] text-neutral-400">{f.name}</span>
+                <div key={i} className="flex items-center justify-between p-2 rounded-xl">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: f.color }} />
+                    <span className="text-xs font-bold text-neutral-400">{f.name}</span>
                   </div>
-                  <span className="text-[11px] sm:text-[12px] font-bold text-white">{f.value}%</span>
+                  <span className="text-xs font-black text-white">{f.value}%</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Health card */}
-          <div className="bg-gradient-to-br from-emerald-600/10 to-teal-600/10 border border-emerald-500/15 rounded-2xl p-4 sm:p-5 flex items-center justify-between group cursor-pointer hover:border-emerald-500/30 transition-all">
-            <div>
-              <CheckCircle className="text-emerald-400 mb-1.5 sm:mb-2" size={20} />
-              <h3 className="font-bold text-white text-[13px] sm:text-[14px]">System Health</h3>
-              <p className="text-[11px] sm:text-[12px] text-emerald-400/80 mt-0.5">All services operational</p>
+          <div className="bg-[#0d0d1a] border border-white/[0.06] rounded-2xl p-5 flex items-center justify-between group cursor-pointer hover:border-violet-500/30 transition-all">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-violet-600/10 flex items-center justify-center text-violet-400">
+                <Database size={18} />
+              </div>
+              <div>
+                <h3 className="font-black text-white text-sm">Cluster Stats</h3>
+                <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-widest mt-1">Syncing every 60s</p>
+              </div>
             </div>
-            <ChevronRight size={17} className="text-emerald-500/40 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
+            <ChevronRight size={16} className="text-neutral-700" />
           </div>
         </div>
       </div>
 
-      {/* ── Bar chart ──────────────────────────────────────────────────── */}
-      <div className="bg-[#0d0d1a] border border-white/[0.06] rounded-2xl p-4 sm:p-6">
-        <div className="flex items-start justify-between mb-4 sm:mb-6 gap-3 flex-wrap">
+      {/* Inference Bar Chart */}
+      <div className="bg-[#0d0d1a] border border-white/[0.06] rounded-[2rem] p-6 sm:p-8">
+        <div className="flex items-center justify-between mb-8 gap-4 flex-wrap">
           <div>
-            <h2 className="font-bold text-white text-[14px] sm:text-[15px]">Token Usage</h2>
-            <p className="text-[11px] sm:text-[12px] text-neutral-600 mt-0.5">Daily API consumption</p>
+            <h2 className="font-black text-white text-lg">Inference Traffic</h2>
+            <p className="text-xs text-neutral-600 font-bold uppercase tracking-widest mt-1">Token density across cluster</p>
           </div>
-          <span className="text-[11px] sm:text-[12px] font-bold text-violet-400 bg-violet-500/10 border border-violet-500/20 px-3 py-1.5 rounded-xl whitespace-nowrap">
-            5,000 / 10,000 tokens
+          <span className="text-[11px] font-black text-violet-400 bg-violet-600/10 border border-violet-500/20 px-4 py-2 rounded-xl whitespace-nowrap uppercase tracking-widest">
+            {chartData.reduce((acc, d) => acc + d.tokens, 0).toLocaleString()} Avg Tokens
           </span>
         </div>
-        <div className="h-36 sm:h-44">
+        <div className="h-44 sm:h-52">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={weekData} margin={{ top: 0, right: 0, left: -24, bottom: 0 }} barSize={22}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.04)" />
-              <XAxis dataKey="day" stroke="transparent" tick={{ fill: '#4b4b5e', fontSize: 10 }} tickLine={false} />
-              <YAxis stroke="transparent" tick={{ fill: '#4b4b5e', fontSize: 10 }} tickLine={false} axisLine={false} />
-              <Tooltip content={<Tip />} />
-              <Bar dataKey="tokens" name="Tokens" fill="#7c6af7" radius={[5, 5, 0, 0]} fillOpacity={0.85} />
+            <BarChart data={chartData} margin={{ top: 0, right: 0, left: -24, bottom: 0 }} barSize={32}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
+              <XAxis dataKey="date" stroke="transparent" tick={{ fill: '#4b4b5e', fontSize: 11, fontWeight: 700 }} tickLine={false} />
+              <YAxis stroke="transparent" tick={{ fill: '#4b4b5e', fontSize: 11, fontWeight: 700 }} tickLine={false} axisLine={false} />
+              <Tooltip content={<Tip />} cursor={{ fill: 'rgba(255,255,255,0.02)' }} />
+              <Bar dataKey="tokens" name="Tokens" fill="#7c6af7" radius={[8, 8, 0, 0]} fillOpacity={0.8} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* ── Activity table ─────────────────────────────────────────────── */}
-      <div className="bg-[#0d0d1a] border border-white/[0.06] rounded-2xl overflow-hidden">
-        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-white/[0.05] flex items-center justify-between">
-          <h2 className="font-bold text-white text-[14px] sm:text-[15px]">Recent Activity</h2>
-          <span className="text-[11px] sm:text-[12px] text-neutral-600">Last 7 days</span>
+      {/* History Log */}
+      <div className="bg-[#0d0d1a] border border-white/[0.06] rounded-[2rem] overflow-hidden shadow-2xl">
+        <div className="px-6 py-5 border-b border-white/[0.05] flex items-center justify-between">
+          <h2 className="font-black text-white text-base">Interaction Event Log</h2>
+          <div className="flex items-center gap-1.5 opacity-40">
+             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+             <span className="text-[9px] font-black text-neutral-500 uppercase tracking-widest">Real-time Stream</span>
+          </div>
         </div>
-        <div className="divide-y divide-white/[0.04]">
-          {[
-            { action: 'Queried EV motor power specs', doc: 'EV_Racing_Rules.pdf', time: '2h ago', type: 'query' },
-            { action: 'Uploaded EIOT Lab Manual', doc: 'EIOT-lab-manual.pdf', time: '4h ago', type: 'upload' },
-            { action: 'Queried trip itinerary highlights', doc: 'Trip to keralam.pdf', time: '6h ago', type: 'query' },
-            { action: 'Generated document summary', doc: 'UX-V2.pdf', time: '1d ago', type: 'summary' },
-          ].map((row, i) => (
-            <div key={i} className="flex items-center gap-3 px-4 sm:px-6 py-3 hover:bg-white/[0.02] transition-colors">
-              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                row.type === 'upload' ? 'bg-cyan-500/10' : row.type === 'summary' ? 'bg-amber-500/10' : 'bg-violet-500/10'
-              }`}>
-                <FileText size={12} className={row.type === 'upload' ? 'text-cyan-400' : row.type === 'summary' ? 'text-amber-400' : 'text-violet-400'} />
+        <div className="divide-y divide-white/[0.03]">
+          {recent.length === 0 ? (
+            <div className="px-6 py-10 text-center text-neutral-700 font-bold uppercase tracking-widest">No cloud events recorded</div>
+          ) : (
+            recent.map((row, i) => (
+              <div key={i} className="flex items-center gap-4 px-6 py-4 hover:bg-white/[0.02] transition-colors group">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                  row.type === 'upload' ? 'bg-cyan-500/10' : 'bg-violet-500/10'
+                }`}>
+                  <FileText size={14} className={row.type === 'upload' ? 'text-cyan-400' : 'text-violet-400'} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white font-bold truncate uppercase tracking-tight">{row.action}</p>
+                  <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-widest mt-0.5">{new Date(row.time).toLocaleString()}</p>
+                </div>
+                <span className="text-[11px] text-neutral-700 font-black uppercase flex-shrink-0 whitespace-nowrap">Logged</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[12px] sm:text-[13px] text-white font-medium truncate">{row.action}</p>
-                <p className="text-[10px] sm:text-[11px] text-neutral-600 mt-0.5 truncate">{row.doc}</p>
-              </div>
-              <span className="text-[10px] sm:text-[11px] text-neutral-700 flex-shrink-0 whitespace-nowrap">{row.time}</span>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>

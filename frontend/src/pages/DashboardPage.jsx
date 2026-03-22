@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Upload, FileText, Trash2, ExternalLink, Plus, Zap, BarChart2,
   MessageSquare, RefreshCw, File, AlertCircle, CheckCircle2,
-  CloudOff, TrendingUp, ArrowRight, Layers
+  CloudOff, TrendingUp, ArrowRight, Layers, Sparkles
 } from 'lucide-react';
 import { useChat } from '../context/ChatContext';
 import { useAuth } from '../context/AuthContext';
@@ -14,18 +14,18 @@ const StatusBadge = ({ status }) => {
   const s = (status || '').toLowerCase();
   if (s.includes('processed') || s.includes('completed') || s.includes('✅'))
     return (
-      <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 ring-1 ring-emerald-500/20 px-2 py-0.5 rounded-full whitespace-nowrap">
+      <span className="inline-flex items-center gap-1 text-[0.65rem] sm:text-[0.7rem] font-semibold text-emerald-400 bg-emerald-500/10 ring-1 ring-emerald-500/20 px-2 py-0.5 rounded-full whitespace-nowrap">
         <CheckCircle2 size={9} />Processed
       </span>
     );
   if (s.includes('failed') || s.includes('❌'))
     return (
-      <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-red-400 bg-red-500/10 ring-1 ring-red-500/20 px-2 py-0.5 rounded-full whitespace-nowrap">
+      <span className="inline-flex items-center gap-1 text-[0.65rem] sm:text-[0.7rem] font-semibold text-red-400 bg-red-500/10 ring-1 ring-red-500/20 px-2 py-0.5 rounded-full whitespace-nowrap">
         <AlertCircle size={9} />Failed
       </span>
     );
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-amber-400 bg-amber-500/10 ring-1 ring-amber-500/20 px-2 py-0.5 rounded-full whitespace-nowrap">
+    <span className="inline-flex items-center gap-1 text-[0.65rem] sm:text-[0.7rem] font-semibold text-amber-400 bg-amber-500/10 ring-1 ring-amber-500/20 px-2 py-0.5 rounded-full whitespace-nowrap">
       <CloudOff size={9} />Processing
     </span>
   );
@@ -37,11 +37,11 @@ const DocumentRow = ({ doc, onDelete }) => (
       <FileText size={14} className="text-violet-400" />
     </div>
     <div className="flex-1 min-w-0">
-      <p className="text-[12px] sm:text-[13px] font-semibold text-white truncate">{doc.name}</p>
+      <p className="text-xs sm:text-sm font-semibold text-white truncate">{doc.name}</p>
       <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-        <span className="text-[10px] sm:text-[11px] text-neutral-600">{doc.size}</span>
-        <span className="text-neutral-800 text-[10px]">·</span>
-        <span className="text-[10px] sm:text-[11px] text-neutral-600">{new Date(doc.uploadedAt).toLocaleDateString()}</span>
+        <span className="text-[0.65rem] sm:text-[0.7rem] text-neutral-600">{doc.size}</span>
+        <span className="text-neutral-800 text-[0.65rem]">·</span>
+        <span className="text-[0.65rem] sm:text-[0.7rem] text-neutral-600">{new Date(doc.uploadedAt).toLocaleDateString()}</span>
       </div>
     </div>
     <StatusBadge status={doc.status} />
@@ -58,7 +58,10 @@ const DocumentRow = ({ doc, onDelete }) => (
 );
 
 const DashboardPage = () => {
-  const { documents, uploadDocument, deleteDocument, loadDocuments, sessions, loadSessions } = useChat();
+  const { 
+    documents, uploadDocument, deleteDocument, loadDocuments, 
+    sessions, loadSessions, createNewChat 
+  } = useChat();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isDragOver, setIsDragOver] = useState(false);
@@ -114,18 +117,11 @@ const DashboardPage = () => {
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-start sm:items-end justify-between gap-3">
         <div>
-          <p className="text-[12px] sm:text-[13px] text-neutral-600 mb-0.5">{greeting},</p>
+          <p className="text-xs sm:text-sm text-neutral-600 mb-0.5">{greeting},</p>
           <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white leading-tight">
             {firstName}&apos;s Dashboard
           </h1>
         </div>
-        <button
-          onClick={() => navigate('/chat')}
-          className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-white text-[12px] sm:text-[13px] font-bold px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl transition-all shadow-lg shadow-violet-600/20 flex-shrink-0">
-          <Plus size={14} />
-          <span className="hidden sm:inline">New Chat</span>
-          <span className="sm:hidden">New</span>
-        </button>
       </div>
 
       {/* ── Stats grid ─────────────────────────────────────────────────── */}
@@ -136,7 +132,7 @@ const DashboardPage = () => {
               <Icon size={16} className={color} />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] sm:text-[11px] font-bold text-neutral-600 uppercase tracking-wider truncate">{label}</p>
+              <p className="text-[0.65rem] sm:text-[0.7rem] font-bold text-neutral-600 uppercase tracking-wider truncate">{label}</p>
               <p className="text-xl sm:text-2xl font-black text-white mt-0.5 leading-none">{value}</p>
             </div>
           </div>
@@ -149,11 +145,11 @@ const DashboardPage = () => {
         {/* Documents — takes 2 cols on lg */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-bold text-white text-[14px] sm:text-[15px] flex items-center gap-2">
+            <h2 className="font-bold text-white text-sm sm:text-base flex items-center gap-2">
               <Upload size={15} className="text-violet-400" /> Documents
             </h2>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] sm:text-[12px] text-neutral-600">{totalDocs} total</span>
+              <span className="text-[0.7rem] sm:text-xs text-neutral-600">{totalDocs} total</span>
               <button
                 onClick={async () => { setLoading(true); await loadDocuments(true); setLoading(false); }}
                 className="p-1.5 hover:bg-white/[0.06] rounded-lg text-neutral-600 hover:text-neutral-400 transition-colors">
@@ -174,11 +170,11 @@ const DashboardPage = () => {
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-violet-500/10 ring-1 ring-violet-500/20 flex items-center justify-center mx-auto mb-3">
               <Upload size={18} className="text-violet-400" />
             </div>
-            <h3 className="text-[13px] sm:text-[14px] font-bold text-white mb-1">Upload Documents</h3>
-            <p className="text-[11px] sm:text-[12px] text-neutral-600 mb-4 leading-relaxed">
+            <h3 className="text-sm sm:text-sm font-bold text-white mb-1">Upload Documents</h3>
+            <p className="text-[0.7rem] sm:text-xs text-neutral-600 mb-4 leading-relaxed">
               Drag &amp; drop PDF files here, or click to browse
             </p>
-            <label className="inline-flex items-center gap-2 bg-white text-black text-[12px] font-bold px-4 py-2 rounded-xl cursor-pointer hover:bg-neutral-100 transition-colors">
+            <label className="inline-flex items-center gap-2 bg-white text-black text-xs font-bold px-4 py-2 rounded-xl cursor-pointer hover:bg-neutral-100 transition-colors">
               <Plus size={13} /> Browse Files
               <input type="file" className="hidden" multiple accept=".pdf" onChange={e => Array.from(e.target.files).forEach(handleUpload)} />
             </label>
@@ -189,12 +185,12 @@ const DashboardPage = () => {
             {loading ? (
               <div className="flex flex-col items-center py-10 gap-2">
                 <RefreshCw size={20} className="animate-spin text-violet-500" />
-                <p className="text-[12px] text-neutral-600">Loading documents…</p>
+                <p className="text-xs text-neutral-600">Loading documents…</p>
               </div>
             ) : documents.length > 0 ? (
               documents.map(doc => <DocumentRow key={doc.id} doc={doc} onDelete={deleteDocument} />)
             ) : (
-              <div className="text-center py-10 text-neutral-700 text-[12px] sm:text-[13px] border border-white/[0.04] rounded-2xl bg-[#0a0a14] leading-relaxed px-4">
+              <div className="text-center py-10 text-neutral-700 text-xs sm:text-sm border border-white/[0.04] rounded-2xl bg-[#0a0a14] leading-relaxed px-4">
                 No documents yet. Upload a PDF to get started.
               </div>
             )}
@@ -203,21 +199,29 @@ const DashboardPage = () => {
 
         {/* Quick Actions + Recent Chats */}
         <div className="space-y-5">
-          <h2 className="font-bold text-white text-[14px] sm:text-[15px] flex items-center gap-2">
+          <h2 className="font-bold text-white text-sm sm:text-base flex items-center gap-2">
             <Zap size={15} className="text-cyan-400" /> Quick Actions
           </h2>
 
           {/* On mobile, show as 2-col grid; on lg show as list */}
           <div className="grid grid-cols-2 lg:grid-cols-1 gap-2.5">
             {quickActions.map(({ icon: Icon, label, sub, color, ring, to }, i) => (
-              <button key={i} onClick={() => navigate(to)}
+              <button key={i} 
+                onClick={() => {
+                  if (label === 'Ask AI') {
+                    const id = createNewChat();
+                    navigate(`/chat/${id}`);
+                  } else {
+                    navigate(to);
+                  }
+                }}
                 className="flex items-center gap-3 p-3 sm:p-4 bg-[#0d0d1a] border border-white/[0.06] rounded-xl hover:border-white/[0.12] hover:bg-[#10101e] transition-all group text-left">
                 <div className={`w-9 h-9 rounded-xl ${color} ring-1 ${ring} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
                   <Icon size={15} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[12px] sm:text-[13px] font-semibold text-white truncate">{label}</p>
-                  <p className="text-[10px] sm:text-[11px] text-neutral-600 mt-0.5 truncate hidden sm:block">{sub}</p>
+                  <p className="text-xs sm:text-sm font-semibold text-white truncate">{label}</p>
+                  <p className="text-[0.65rem] sm:text-[0.7rem] text-neutral-600 mt-0.5 truncate hidden sm:block">{sub}</p>
                 </div>
                 <ArrowRight size={13} className="text-neutral-700 group-hover:text-neutral-400 flex-shrink-0 hidden lg:block" />
               </button>
@@ -227,13 +231,13 @@ const DashboardPage = () => {
           {/* Recent chats */}
           {sessions.length > 0 && (
             <div>
-              <h3 className="text-[11px] sm:text-[12px] font-bold text-neutral-600 uppercase tracking-wider mb-3">Recent Chats</h3>
+              <h3 className="text-[0.7rem] sm:text-xs font-bold text-neutral-600 uppercase tracking-wider mb-3">Recent Chats</h3>
               <div className="space-y-2">
                 {sessions.slice(0, 4).map(s => (
                   <button key={s.sessionId} onClick={() => navigate(`/chat/${s.sessionId}`)}
                     className="w-full flex items-center gap-2.5 p-3 bg-[#0d0d1a] border border-white/[0.05] rounded-xl hover:border-white/[0.1] transition-all text-left group">
                     <MessageSquare size={12} className="text-neutral-600 flex-shrink-0" />
-                    <span className="text-[12px] text-neutral-400 truncate flex-1 font-medium">{s.title}</span>
+                    <span className="text-xs text-neutral-400 truncate flex-1 font-medium">{s.title}</span>
                     <ArrowRight size={11} className="text-neutral-700 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                   </button>
                 ))}

@@ -60,7 +60,7 @@ const LoginPage = () => {
           </p>
           <div className="space-y-3">
             {['Upload any PDF instantly', 'Ask in plain English', 'Get cited, precise answers', 'Cross-document intelligence'].map((f, i) => (
-              <div key={i} className="flex items-center gap-3 text-[13px] text-neutral-400">
+              <div key={i} className="flex items-center gap-3 text-sm text-neutral-400">
                 <div className="w-5 h-5 rounded-full bg-violet-500/15 ring-1 ring-violet-500/25 flex items-center justify-center flex-shrink-0">
                   <CheckCircle2 size={11} className="text-violet-400" />
                 </div>
@@ -86,7 +86,7 @@ const LoginPage = () => {
           </div>
 
           {error && (
-            <div className="flex items-start gap-2.5 bg-red-500/[0.08] border border-red-500/20 text-red-400 text-[13px] rounded-xl px-4 py-3 mb-5">
+            <div className="flex items-start gap-2.5 bg-red-500/[0.08] border border-red-500/20 text-red-400 text-sm rounded-xl px-4 py-3 mb-5">
               <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
@@ -95,13 +95,13 @@ const LoginPage = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
             <div>
-              <label className="block text-[11px] font-bold text-neutral-500 uppercase tracking-wider mb-1.5">Email</label>
+              <label className="block text-[0.7rem] font-bold text-neutral-500 uppercase tracking-wider mb-1.5">Email</label>
               <div className="relative group">
                 <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-600 group-focus-within:text-violet-400 transition-colors pointer-events-none" />
                 <input
                   type="email" value={email} onChange={e => setEmail(e.target.value)}
                   placeholder="you@company.com" autoComplete="email"
-                  className="w-full bg-[#0e0e1c] border border-white/[0.08] focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/10 rounded-xl pl-10 pr-4 py-3 text-[13px] text-white placeholder:text-neutral-700 outline-none transition-all"
+                  className="w-full bg-[#0e0e1c] border border-white/[0.08] focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-neutral-700 outline-none transition-all"
                 />
               </div>
             </div>
@@ -109,15 +109,15 @@ const LoginPage = () => {
             {/* Password */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">Password</label>
-                <a href="#" className="text-[11px] text-violet-400 hover:text-violet-300 font-semibold transition-colors">Forgot password?</a>
+                <label className="text-[0.7rem] font-bold text-neutral-500 uppercase tracking-wider">Password</label>
+                <a href="#" className="text-[0.7rem] text-violet-400 hover:text-violet-300 font-semibold transition-colors">Forgot password?</a>
               </div>
               <div className="relative group">
                 <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-600 group-focus-within:text-violet-400 transition-colors pointer-events-none" />
                 <input
                   type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••" autoComplete="current-password"
-                  className="w-full bg-[#0e0e1c] border border-white/[0.08] focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/10 rounded-xl pl-10 pr-10 py-3 text-[13px] text-white placeholder:text-neutral-700 outline-none transition-all"
+                  className="w-full bg-[#0e0e1c] border border-white/[0.08] focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/10 rounded-xl pl-10 pr-10 py-3 text-sm text-white placeholder:text-neutral-700 outline-none transition-all"
                 />
                 <button type="button" onClick={() => setShowPass(p => !p)}
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-neutral-400 transition-colors p-0.5">
@@ -135,7 +135,7 @@ const LoginPage = () => {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-[13px] text-neutral-600">
+          <p className="mt-6 text-center text-sm text-neutral-600">
             No account?{' '}
             <Link to="/signup" className="text-violet-400 hover:text-violet-300 font-semibold transition-colors">
               Create one free

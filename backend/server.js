@@ -37,6 +37,8 @@ const {
 const authRoutes = require('./routes/authRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const contactRoutes = require('./routes/contactRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 
 // Import database connection
 const connectDB = require('./config/db');
@@ -164,11 +166,14 @@ app.get('/debug/n8n', async (req, res) => {
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/chat', chatRoutes);
 app.use('/api/v1/uploads', uploadRoutes);
+app.use('/api/v1/contact', contactRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
 
 // Backward compatibility - route old endpoints to v1
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
-app.use('/api/uploads', uploadRoutes); // fixed: was /api/upload (missing 's')
+app.use('/api/uploads', uploadRoutes); 
+app.use('/api/analytics', analyticsRoutes);
 
 // ============================================================
 // ERROR HANDLING

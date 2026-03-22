@@ -1,21 +1,22 @@
-// src/pages/ChatPage.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Send, Paperclip, FileText, Copy, ThumbsUp, ThumbsDown,
-  Sparkles, RotateCcw, Check, ChevronDown
+  Sparkles, RotateCcw, Check, ChevronDown, Plus, 
+  Search, Shield, Zap, Globe, MessageSquare
 } from 'lucide-react';
 import { useChat } from '../context/ChatContext';
 import toast from 'react-hot-toast';
-import { sendMessage, uploadFile, updateChatFeedback } from '../api/api';
+import { updateChatFeedback } from '../api/api';
 
 // ── Inline markdown ────────────────────────────────────────────────────────────
 const renderInline = (text) =>
   text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((p, i) => {
     if (p.startsWith('**') && p.endsWith('**'))
-      return <strong key={i} className="text-white font-semibold">{p.slice(2, -2)}</strong>;
+      return <strong key={i} className="text-white font-bold">{p.slice(2, -2)}</strong>;
     if (p.startsWith('`') && p.endsWith('`'))
-      return <code key={i} className="bg-black/40 text-emerald-400 px-1 py-0.5 rounded text-[11px] font-mono">{p.slice(1, -1)}</code>;
+      return <code key={i} className="bg-white/10 text-violet-300 px-1.5 py-0.5 rounded-md text-[0.75rem] font-mono border border-white/5">{p.slice(1, -1)}</code>;
     return p;
   });
 
@@ -27,39 +28,46 @@ const renderContent = (text) => {
   while (i < lines.length) {
     const line = lines[i];
     if (line.startsWith('```')) {
+      const parts = line.split(' ');
+      const lang = parts[1] || 'code';
       const code = [];
       i++;
       while (i < lines.length && !lines[i].startsWith('```')) { code.push(lines[i]); i++; }
       els.push(
-        <pre key={i} className="bg-black/40 border border-white/10 rounded-xl p-3 sm:p-4 my-3 overflow-x-auto text-emerald-400 text-[11px] sm:text-[12px] font-mono leading-relaxed">
-          <code>{code.join('\n')}</code>
-        </pre>
+        <div key={i} className="relative group my-4">
+          <div className="absolute top-0 right-0 px-3 py-1 text-[10px] font-bold text-neutral-500 uppercase tracking-widest bg-white/5 rounded-bl-xl border-l border-b border-white/10 backdrop-blur-md">
+            {lang}
+          </div>
+          <pre className="bg-[#0d0d1a] border border-white/10 rounded-2xl p-4 sm:p-5 overflow-x-auto text-emerald-400 text-xs sm:text-[13px] font-mono leading-relaxed shadow-inner">
+            <code>{code.join('\n')}</code>
+          </pre>
+        </div>
       );
     } else if (line.startsWith('### ')) {
-      els.push(<h3 key={i} className="text-[13px] sm:text-[14px] font-bold text-white mt-4 mb-1">{line.slice(4)}</h3>);
+      els.push(<h3 key={i} className="text-sm sm:text-base font-black text-white mt-6 mb-2">{line.slice(4)}</h3>);
     } else if (line.startsWith('## ')) {
-      els.push(<h2 key={i} className="text-[14px] sm:text-[15px] font-bold text-white mt-5 mb-1.5">{line.slice(3)}</h2>);
+      els.push(<h2 key={i} className="text-base sm:text-lg font-black text-white mt-8 mb-3 border-b border-white/5 pb-1">{line.slice(3)}</h2>);
     } else if (line.startsWith('# ')) {
-      els.push(<h1 key={i} className="text-[15px] sm:text-base font-bold text-white mt-5 mb-2">{line.slice(2)}</h1>);
+      els.push(<h1 key={i} className="text-lg sm:text-xl font-black text-white mt-10 mb-4">{line.slice(2)}</h1>);
     } else if (line.startsWith('- ') || line.startsWith('* ')) {
       els.push(
-        <div key={i} className="flex gap-2 my-0.5">
-          <span className="mt-2 flex-shrink-0 w-1 h-1 rounded-full bg-violet-400" />
-          <span className="text-neutral-300 text-[12px] sm:text-[13px] leading-relaxed">{renderInline(line.slice(2))}</span>
+        <div key={i} className="flex gap-3 my-1.5 pl-1">
+          <span className="mt-2.5 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-violet-500 shadow-sm shadow-violet-500/50" />
+          <span className="text-neutral-300 text-[13px] sm:text-[15px] leading-relaxed">{renderInline(line.slice(2))}</span>
         </div>
       );
     } else if (/^\d+\.\s/.test(line)) {
       const num = line.match(/^(\d+)\./)[1];
       els.push(
-        <div key={i} className="flex gap-2 my-0.5">
-          <span className="text-violet-400 text-[10px] sm:text-[11px] font-bold mt-1 w-4 flex-shrink-0">{num}.</span>
-          <span className="text-neutral-300 text-[12px] sm:text-[13px] leading-relaxed">{renderInline(line.replace(/^\d+\.\s/, ''))}</span>
+        <div key={i} className="flex gap-3 my-1.5 pl-1">
+          <span className="text-violet-500 text-xs sm:text-sm font-black mt-1 w-5 flex-shrink-0">{num}.</span>
+          <span className="text-neutral-300 text-[13px] sm:text-[15px] leading-relaxed">{renderInline(line.replace(/^\d+\.\s/, ''))}</span>
         </div>
       );
     } else if (line.trim() === '') {
-      els.push(<div key={i} className="h-1.5 sm:h-2" />);
+      els.push(<div key={i} className="h-3" />);
     } else {
-      els.push(<p key={i} className="text-neutral-300 text-[12px] sm:text-[13px] leading-relaxed">{renderInline(line)}</p>);
+      els.push(<p key={i} className="text-neutral-300 text-[13px] sm:text-[15px] leading-relaxed mb-4">{renderInline(line)}</p>);
     }
     i++;
   }
@@ -67,133 +75,182 @@ const renderContent = (text) => {
 };
 
 // ── Message bubble ─────────────────────────────────────────────────────────────
-const Bubble = ({ message }) => {
+const MessageBubble = ({ message }) => {
   const isAI = message.sender === 'ai';
   const [copied, setCopied] = useState(false);
   const [liked, setLiked] = useState(null);
 
-  const copy = () => {
+  const copyToClipboard = () => {
     navigator.clipboard.writeText(message.text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-  const feedback = async (v) => {
+  
+  const handleFeedback = async (v) => {
     setLiked(v);
     if (message.chatId) {
       try { await updateChatFeedback(message.chatId, { rating: v ? 5 : 1, isAccurate: v }); } catch {}
     }
   };
 
-  if (!isAI) {
-    return (
-      <div className="flex justify-end mb-4 sm:mb-5 group">
-        <div className="max-w-[85%] sm:max-w-[75%]">
-          <div className="bg-violet-600/15 border border-violet-500/20 text-white rounded-2xl rounded-tr-sm px-3.5 sm:px-4 py-3 text-[12px] sm:text-[13px] leading-relaxed">
-            {message.text}
-          </div>
-          {message.files?.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2 justify-end">
-              {message.files.map((f, i) => (
-                <span key={i} className="flex items-center gap-1 bg-white/[0.05] border border-white/[0.08] text-neutral-400 text-[10px] sm:text-[11px] px-2 py-1 rounded-lg">
-                  <FileText size={9} className="text-violet-400" /> {f.name}
-                </span>
-              ))}
-            </div>
-          )}
-          <p className="text-[10px] text-neutral-700 mt-1 text-right">
-            {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="mb-6 sm:mb-7 group">
-      <div className="flex gap-2.5 sm:gap-3 items-start">
-        <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-lg shadow-violet-500/20">
-          <Sparkles size={12} className="text-white" />
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`flex w-full mb-8 ${isAI ? 'justify-start' : 'justify-end'}`}
+    >
+      <div className={`flex gap-3 max-w-[90%] sm:max-w-[85%] ${isAI ? 'flex-row' : 'flex-row-reverse'}`}>
+        {/* Avatar */}
+        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center flex-shrink-0 mt-1 shadow-lg ${
+          isAI 
+            ? 'bg-gradient-to-br from-violet-600 to-indigo-700 shadow-violet-500/20' 
+            : 'bg-white/[0.05] border border-white/10'
+        }`}>
+          {isAI ? <Sparkles size={16} className="text-white" /> : <Shield size={16} className="text-neutral-400" />}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-[10px] sm:text-[11px] font-bold text-neutral-500 uppercase tracking-widest">Deep Assistant</span>
+
+        {/* Bubble Content */}
+        <div className="flex-1 min-w-0 flex flex-col items-start gap-1">
+          <div className={`flex items-center gap-3 px-1 mb-1.5 ${!isAI && 'w-full justify-end'}`}>
+            <span className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.2em]">
+              {isAI ? 'Deep Assistant' : 'You'}
+            </span>
             <span className="text-[10px] text-neutral-700">
               {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
-          <div className="space-y-0.5">{renderContent(message.text)}</div>
 
-          {message.sources?.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-white/[0.05]">
-              <p className="text-[9px] sm:text-[10px] font-bold text-neutral-700 uppercase tracking-widest mb-1.5">Sources</p>
-              <div className="flex flex-wrap gap-1.5">
-                {message.sources.map((src, i) => (
-                  <span key={i} className="flex items-center gap-1 text-[10px] sm:text-[11px] text-violet-400 bg-violet-500/[0.08] border border-violet-500/20 px-2 py-1 rounded-lg">
-                    <FileText size={9} /> {src.filename} p.{src.page}
-                  </span>
+          <div className={`
+            relative p-4 sm:p-5 rounded-3xl overflow-hidden shadow-sm
+            ${isAI 
+              ? 'bg-[#0e0e1c]/80 border border-white/5 rounded-tl-sm backdrop-blur-md' 
+              : 'bg-violet-600 text-white rounded-tr-sm shadow-violet-900/10'
+            }
+          `}>
+             {/* AI Glass effect overlay */}
+            {isAI && (
+              <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+            )}
+            
+            <div className={isAI ? 'relative z-10' : ''}>
+              {isAI ? renderContent(message.text) : <p className="text-[14px] sm:text-[15px] leading-relaxed font-medium">{message.text}</p>}
+            </div>
+
+            {/* User attached files */}
+            {!isAI && message.files?.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-white/10">
+                {message.files.map((f, i) => (
+                  <div key={i} className="flex items-center gap-1.5 bg-white/10 border border-white/10 text-[11px] px-2.5 py-1.5 rounded-xl backdrop-blur-sm">
+                    <FileText size={10} className="text-violet-200" />
+                    <span className="truncate max-w-[120px] font-bold">{f.name}</span>
+                  </div>
                 ))}
+              </div>
+            )}
+          </div>
+
+          {/* AI Sources & Metadata */}
+          {isAI && (
+            <div className="flex flex-col gap-2.5 mt-2 ml-1 w-full">
+              {message.sources?.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {message.sources.map((src, i) => (
+                    <motion.span whileHover={{ scale: 1.02 }} key={i} className="flex items-center gap-1.5 text-[11px] text-violet-400 bg-violet-600/10 border border-violet-500/20 px-3 py-1.5 rounded-xl cursor-default transition-all hover:bg-violet-600/15">
+                      <FileText size={10} /> {src.filename} <span className="opacity-50">•</span> p.{src.page}
+                    </motion.span>
+                  ))}
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex items-center gap-1">
+                <button onClick={copyToClipboard} className="flex items-center gap-1.5 p-2 hover:bg-white/[0.05] rounded-xl text-[11px] font-bold text-neutral-600 hover:text-neutral-400 transition-all">
+                  {copied ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
+                  {copied ? 'Copied' : 'Copy'}
+                </button>
+                <div className="w-px h-3 bg-white/5 mx-1" />
+                <button onClick={() => handleFeedback(true)} className={`p-2 hover:bg-white/[0.05] rounded-xl transition-all ${liked === true ? 'text-emerald-400' : 'text-neutral-600 hover:text-neutral-400'}`}>
+                  <ThumbsUp size={12} />
+                </button>
+                <button onClick={() => handleFeedback(false)} className={`p-2 hover:bg-white/[0.05] rounded-xl transition-all ${liked === false ? 'text-red-400' : 'text-neutral-600 hover:text-neutral-400'}`}>
+                  <ThumbsDown size={12} />
+                </button>
               </div>
             </div>
           )}
-
-          <div className="flex items-center gap-0.5 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button onClick={copy} className="flex items-center gap-1.5 p-1.5 hover:bg-white/[0.06] rounded-lg text-[10px] sm:text-[11px] text-neutral-700 hover:text-neutral-400 transition-colors">
-              {copied ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
-              {copied ? 'Copied' : 'Copy'}
-            </button>
-            <button onClick={() => feedback(true)} className={`p-1.5 hover:bg-white/[0.06] rounded-lg transition-colors ${liked === true ? 'text-emerald-400' : 'text-neutral-700 hover:text-neutral-400'}`}>
-              <ThumbsUp size={11} />
-            </button>
-            <button onClick={() => feedback(false)} className={`p-1.5 hover:bg-white/[0.06] rounded-lg transition-colors ${liked === false ? 'text-red-400' : 'text-neutral-700 hover:text-neutral-400'}`}>
-              <ThumbsDown size={11} />
-            </button>
-          </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
-const TypingDots = () => (
-  <div className="flex gap-2.5 items-start mb-6">
-    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center flex-shrink-0">
-      <Sparkles size={12} className="text-white animate-pulse" />
+const TypingIndicator = () => (
+  <motion.div
+    initial={{ opacity: 0, scale: 0.95 }}
+    animate={{ opacity: 1, scale: 1 }}
+    className="flex gap-3 mb-8"
+  >
+    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-700 flex items-center justify-center flex-shrink-0 shadow-lg shadow-violet-500/20">
+      <Sparkles size={16} className="text-white animate-pulse" />
     </div>
-    <div>
-      <p className="text-[10px] font-bold text-neutral-600 uppercase tracking-widest mb-2">Deep Assistant</p>
-      <div className="flex items-center gap-1.5 py-1">
+    <div className="flex-1 max-w-[100px]">
+      <div className="flex items-center gap-3 px-1 mb-1.5">
+        <span className="text-[10px] font-black text-neutral-600 uppercase tracking-widest">Deep Assistant</span>
+      </div>
+      <div className="bg-[#0e0e1c]/80 border border-white/5 rounded-3xl rounded-tl-sm p-4 backdrop-blur-md flex items-center justify-center gap-1.5 h-11">
         {[0, 150, 300].map(d => (
-          <span key={d} className="w-1.5 h-1.5 rounded-full bg-violet-400/60 animate-bounce" style={{ animationDelay: `${d}ms` }} />
+          <motion.span 
+            key={d} 
+            animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 0.8, repeat: Infinity, delay: d/1000 }}
+            className="w-1.5 h-1.5 rounded-full bg-violet-400" 
+          />
         ))}
       </div>
     </div>
-  </div>
+  </motion.div>
 );
 
 const SUGGESTIONS = [
-  'Summarize the key findings',
-  'What are the main topics?',
-  'Compare the methodologies',
-  'Extract all important dates',
+  { icon: Search, text: 'Summarize key findings' },
+  { icon: Globe, text: 'Analyze global impact' },
+  { icon: Zap, text: 'Extract quick action items' },
+  { icon: MessageSquare, text: 'What is the main topic?' },
 ];
 
-// ── Main ───────────────────────────────────────────────────────────────────────
 const ChatPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { sessions, currentSessionId, setCurrentSessionId, addMessage, createNewChat, getChatMessages, loadSessions } = useChat();
+  const location = useLocation();
+  const {
+    sessions,
+    currentSessionId,
+    setCurrentSessionId,
+    addMessage,
+    createNewChat,
+    getChatMessages,
+    loadSessions,
+    uploadDocument,
+    sendMessage
+  } = useChat();
+  
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState([]);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
+  
   const messagesEndRef = useRef(null);
   const scrollRef = useRef(null);
   const textareaRef = useRef(null);
+  
   const messages = getChatMessages(id);
 
   useEffect(() => { loadSessions(); }, [loadSessions]);
   useEffect(() => { if (id && id !== currentSessionId) setCurrentSessionId(id); }, [id, currentSessionId, setCurrentSessionId]);
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isTyping]);
+  useEffect(() => { 
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); 
+  }, [messages, isTyping]);
+  
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -201,153 +258,232 @@ const ChatPage = () => {
     }
   }, [input]);
 
-  const handleScroll = (e) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.target;
-    setShowScrollBtn(scrollHeight - scrollTop - clientHeight > 120);
-  };
+  useEffect(() => {
+    if (location.state?.initialPrompt) {
+      const prompt = location.state.initialPrompt;
+      window.history.replaceState({}, document.title);
+      handleSend(null, prompt);
+    }
+  }, [location.state, id]);
 
-  const handleSend = async (e) => {
+  const handleSend = async (e, forcedText = null) => {
     e?.preventDefault();
-    const trimmed = input.trim();
-    if ((!trimmed && !attachedFiles.length) || isTyping) return;
+    const textToUse = forcedText || input.trim();
+    if ((!textToUse && !attachedFiles.length) || isTyping) return;
+    
     let targetId = id;
-    if (!targetId) { targetId = createNewChat(); navigate(`/chat/${targetId}`); }
-    addMessage(targetId, { id: Date.now(), sender: 'user', text: trimmed, files: [...attachedFiles], timestamp: new Date().toISOString() });
-    setInput(''); setAttachedFiles([]); setIsTyping(true);
+    if (!targetId) { 
+      targetId = createNewChat(); 
+      navigate(`/chat/${targetId}`, { replace: true }); 
+    }
+    
+    addMessage(targetId, { 
+      id: Date.now(), 
+      sender: 'user', 
+      text: textToUse, 
+      files: [...attachedFiles], 
+      timestamp: new Date().toISOString() 
+    });
+    
+    if (!forcedText) setInput(''); 
+    setAttachedFiles([]); 
+    setIsTyping(true);
+    
     try {
-      const aiText = await sendMessage(trimmed || 'Analyze the uploaded file', targetId);
+      const aiText = await sendMessage(textToUse || 'Analyze the uploaded file', targetId);
       addMessage(targetId, { id: Date.now() + 1, sender: 'ai', text: aiText, timestamp: new Date().toISOString() });
     } catch (err) {
-      toast.error(err.message || 'Failed to reach Deep Assistant');
-      addMessage(targetId, { id: Date.now() + 1, sender: 'ai', text: 'Sorry, I encountered an error. Please try again.', timestamp: new Date().toISOString() });
+      toast.error(err.message || 'Error processing request');
+      addMessage(targetId, { id: Date.now() + 1, sender: 'ai', text: 'Encountered an issue connecting to the AI core. Please try again.', timestamp: new Date().toISOString() });
     } finally { setIsTyping(false); }
   };
 
-  const handleFileUpload = async (e) => {
+  const onFileUpload = async (e) => {
     const files = Array.from(e.target.files);
     const valid = files.filter(f => f.type === 'application/pdf');
-    if (valid.length !== files.length) toast.error('Only PDF files are supported');
+    if (valid.length !== files.length) toast.error('Only PDF files supported');
     if (!valid.length) return;
+
     for (const file of valid) {
-      const tid = toast.loading(`Uploading ${file.name}…`);
-      try { await uploadFile(file, id); setAttachedFiles(p => [...p, file]); toast.success(`${file.name} ready`, { id: tid }); }
-      catch (err) { toast.error(err.message, { id: tid }); }
+      const tid = toast.loading(`Preparing ${file.name}…`);
+      try {
+        await uploadDocument(file);
+        setAttachedFiles(p => [...p, file]);
+        toast.success(`${file.name} uploaded`, { id: tid });
+      } catch (err) {
+        toast.error(err.message, { id: tid });
+      }
     }
-    // Reset file input
     e.target.value = '';
   };
 
-  if (!id && sessions.length > 0) { navigate(`/chat/${sessions[0].sessionId}`); return null; }
+  if (!id && sessions.length > 0) {
+    navigate(`/chat/${sessions[0].sessionId}`);
+    return null;
+  }
 
   const isEmpty = messages.length === 0;
 
   return (
-    <div className="flex flex-col bg-[#07070f] relative" style={{ height: 'calc(100vh - 56px)' }}>
+    <div className="flex flex-col bg-[#07070f] relative overflow-hidden" style={{ height: 'calc(100vh - 56px)' }}>
+      {/* Decorative backdrop gradients */}
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-violet-600/5 blur-[120px] rounded-full pointer-events-none -z-10 animate-pulse" />
+      <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-indigo-600/5 blur-[100px] rounded-full pointer-events-none -z-10" />
 
-      {/* Messages area */}
+      {/* Main viewport */}
       <div
         ref={scrollRef}
-        onScroll={handleScroll}
-        className="flex-1 overflow-y-auto overscroll-contain"
+        onScroll={(e) => setShowScrollBtn(e.target.scrollHeight - e.target.scrollTop - e.target.clientHeight > 150)}
+        className="flex-1 overflow-y-auto overscroll-contain no-scrollbar"
       >
-        <div className="max-w-2xl mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8">
-          {isEmpty ? (
-            <div className="flex flex-col items-center justify-center min-h-[50vh] text-center gap-6 sm:gap-8 px-2">
-              <div className="relative">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center shadow-2xl shadow-violet-500/30">
-                  <Sparkles size={22} className="text-white" />
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-16">
+          <AnimatePresence mode="popLayout">
+            {isEmpty ? (
+              <motion.div 
+                key="empty"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                className="flex flex-col items-center justify-center min-h-[55vh] text-center"
+              >
+                <div className="relative mb-8">
+                  <motion.div 
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                    className="absolute -inset-4 bg-gradient-to-tr from-violet-500/20 to-indigo-500/20 rounded-full blur-2xl" 
+                  />
+                  <div className="relative w-20 h-20 rounded-[2rem] bg-gradient-to-br from-violet-600 to-indigo-700 flex items-center justify-center shadow-2xl shadow-violet-500/40 border border-white/20">
+                    <Sparkles size={40} className="text-white" />
+                  </div>
                 </div>
-                <div className="absolute -inset-3 bg-gradient-to-br from-violet-500/10 to-purple-500/10 rounded-3xl blur-xl -z-10" />
+
+                <div className="max-w-md mx-auto mb-12">
+                  <h2 className="text-3xl font-black tracking-tight text-white mb-4 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70">
+                    Start your research.
+                  </h2>
+                  <p className="text-neutral-500 text-[15px] leading-relaxed">
+                    Upload your documents and ask precise questions. I'll translate complex papers into clear, cited insights.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+                  {SUGGESTIONS.map((s, i) => (
+                    <motion.button 
+                      whileHover={{ scale: 1.02, translateY: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      key={i} 
+                      onClick={() => setInput(s.text)}
+                      className="flex items-center gap-3 p-4 bg-white/[0.03] border border-white/[0.08] hover:border-violet-500/30 hover:bg-white/[0.05] rounded-2xl text-left transition-all"
+                    >
+                      <div className="w-8 h-8 rounded-xl bg-violet-600/10 flex items-center justify-center flex-shrink-0">
+                        <s.icon size={14} className="text-violet-400" />
+                      </div>
+                      <span className="text-[13px] sm:text-[14px] text-neutral-400 font-bold group-hover:text-white">{s.text}</span>
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+            ) : (
+              <div key="messages">
+                {messages.map(msg => <MessageBubble key={msg.id} message={msg} />)}
+                {isTyping && <TypingIndicator />}
               </div>
-              <div>
-                <h2 className="text-lg sm:text-xl font-black tracking-tight text-white mb-2">How can I help you today?</h2>
-                <p className="text-[12px] sm:text-[13px] text-neutral-500 max-w-xs sm:max-w-sm leading-relaxed">
-                  Ask me anything about your uploaded documents. I will surface precise, cited answers.
-                </p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-sm sm:max-w-lg">
-                {SUGGESTIONS.map((s, i) => (
-                  <button key={i} onClick={() => setInput(s)}
-                    className="p-3 sm:p-3.5 bg-[#0d0d1a] border border-white/[0.07] hover:border-violet-500/30 hover:bg-[#10101e] rounded-xl text-[12px] sm:text-[13px] text-neutral-400 hover:text-white text-left transition-all group">
-                    <span className="text-violet-400 mr-1.5 group-hover:translate-x-0.5 inline-block transition-transform">→</span>
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <>
-              {messages.map(msg => <Bubble key={msg.id} message={msg} />)}
-              {isTyping && <TypingDots />}
-            </>
-          )}
-          <div ref={messagesEndRef} />
+            )}
+          </AnimatePresence>
+          <div ref={messagesEndRef} className="h-4" />
         </div>
       </div>
 
-      {/* Scroll to bottom button */}
-      {showScrollBtn && (
-        <button
-          onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })}
-          className="absolute bottom-28 sm:bottom-32 right-4 sm:right-5 w-8 h-8 bg-[#0e0e1c] border border-white/[0.1] rounded-full flex items-center justify-center shadow-xl hover:bg-[#14141f] transition-all z-10">
-          <ChevronDown size={15} className="text-neutral-400" />
-        </button>
-      )}
+      {/* Floating UI Elements */}
+      <AnimatePresence>
+        {showScrollBtn && (
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })}
+            className="absolute bottom-32 right-6 w-10 h-10 bg-white/[0.05] border border-white/10 rounded-2xl flex items-center justify-center shadow-2xl backdrop-blur-xl hover:bg-white/[0.08] transition-all z-20 group"
+          >
+            <ChevronDown size={18} className="text-neutral-400 group-hover:text-white group-hover:translate-y-0.5 transition-all" />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
-      {/* Input bar */}
-      <div className="border-t border-white/[0.05] bg-[#07070f] px-3 sm:px-4 py-3 sm:py-4 flex-shrink-0">
-        <div className="max-w-2xl mx-auto">
-          {/* Attached file chips */}
-          {attachedFiles.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-              {attachedFiles.map((f, i) => (
-                <span key={i} className="flex items-center gap-1.5 bg-[#0e0e1c] border border-white/[0.08] text-[11px] sm:text-[12px] text-white px-2.5 sm:px-3 py-1.5 rounded-xl">
-                  <FileText size={10} className="text-violet-400 flex-shrink-0" />
-                  <span className="max-w-[80px] sm:max-w-[120px] truncate">{f.name}</span>
-                  <button onClick={() => setAttachedFiles(p => p.filter((_, j) => j !== i))} className="text-neutral-600 hover:text-red-400 ml-0.5 flex-shrink-0">×</button>
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Text input */}
-          <div className="relative bg-[#0e0e1c] border border-white/[0.08] rounded-2xl hover:border-white/[0.12] focus-within:border-violet-500/50 focus-within:ring-2 focus-within:ring-violet-500/10 transition-all">
-            <div className="flex items-end gap-1.5 sm:gap-2 p-2 sm:p-3">
-              {/* Attach button */}
-              <label className="p-1.5 sm:p-2 text-neutral-600 hover:text-neutral-300 transition-colors cursor-pointer rounded-xl hover:bg-white/[0.05] flex-shrink-0">
-                <Paperclip size={16} />
-                <input type="file" className="hidden" multiple accept=".pdf" onChange={handleFileUpload} />
-              </label>
-
-              {/* Textarea */}
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                placeholder="Message Deep Assistant…"
-                rows={1}
-                className="flex-1 bg-transparent border-none outline-none text-[13px] text-white placeholder:text-neutral-700 resize-none py-1 sm:py-1.5 max-h-40 leading-relaxed min-w-0"
-              />
-
-              {/* Send button */}
-              <button
-                onClick={handleSend}
-                disabled={(!input.trim() && !attachedFiles.length) || isTyping}
-                className={`p-2 sm:p-2.5 rounded-xl flex-shrink-0 transition-all active:scale-95 ${
-                  (!input.trim() && !attachedFiles.length) || isTyping
-                    ? 'bg-white/[0.04] text-neutral-700 cursor-not-allowed'
-                    : 'bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-violet-600/20'
-                }`}
+      {/* Input Area */}
+      <div className="border-t border-white/[0.05] bg-[#07070f]/95 backdrop-blur-md px-4 py-4 sm:py-6 relative z-30">
+        <div className="max-w-3xl mx-auto relative">
+          {/* File attachments bar */}
+          <AnimatePresence>
+            {attachedFiles.length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="flex flex-wrap gap-2 mb-3 px-1"
               >
-                {isTyping ? <RotateCcw size={15} className="animate-spin" /> : <Send size={15} />}
-              </button>
+                {attachedFiles.map((f, i) => (
+                  <div key={i} className="flex items-center gap-2 bg-violet-600/10 border border-violet-500/20 px-3 py-2 rounded-2xl">
+                    <FileText size={12} className="text-violet-400" />
+                    <span className="text-xs text-white/90 font-bold max-w-[150px] truncate">{f.name}</span>
+                    <button onClick={() => setAttachedFiles(p => p.filter((_, j) => j !== i))} className="w-5 h-5 rounded-full hover:bg-white/10 flex items-center justify-center text-neutral-500 hover:text-white transition-colors">×</button>
+                  </div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Glass Input Container */}
+          <div className="relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-600/20 to-indigo-600/20 rounded-[1.8rem] opacity-0 group-focus-within:opacity-100 blur transition duration-500" />
+            <div className={`
+              relative bg-[#0d0d1a] border border-white/[0.08] rounded-[1.6rem] 
+              focus-within:border-violet-500/40 focus-within:bg-[#0e0e1c]
+              transition-all duration-300 shadow-xl
+            `}>
+              <div className="flex items-end p-2 sm:p-2.5">
+                <label className="p-3 text-neutral-600 hover:text-violet-400 transition-all cursor-pointer rounded-2xl hover:bg-white/[0.05] group">
+                  <Paperclip size={20} className="group-hover:rotate-12 transition-transform" />
+                  <input type="file" className="hidden" multiple accept=".pdf" onChange={onFileUpload} />
+                </label>
+
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                  placeholder="Ask Deep Assistant anything…"
+                  rows={1}
+                  className="flex-1 bg-transparent border-none focus:ring-0 text-[15px] text-white placeholder:text-neutral-700 resize-none py-3 px-2 max-h-40 leading-relaxed font-medium"
+                />
+
+                <div className="flex items-center gap-2 pr-1 pb-1">
+                  <button
+                    onClick={handleSend}
+                    disabled={(!input.trim() && !attachedFiles.length) || isTyping}
+                    className={`
+                      w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-300
+                      ${(!input.trim() && !attachedFiles.length) || isTyping
+                        ? 'bg-white/[0.04] text-neutral-700 cursor-not-allowed opacity-50'
+                        : 'bg-violet-600 hover:bg-violet-500 text-white shadow-xl shadow-violet-600/30 ring-2 ring-violet-400/20 hover:scale-105 active:scale-95'
+                      }
+                    `}
+                  >
+                    {isTyping ? <RotateCcw size={18} className="animate-spin" /> : <Send size={18} className="translate-x-0.5 -translate-y-0.5" />}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <p className="text-center text-[9px] sm:text-[10px] text-neutral-800 mt-1.5 tracking-wider uppercase">
-            Deep Assistant may make mistakes — verify important information
-          </p>
+          <div className="flex items-center justify-between px-4 mt-3">
+             <div className="flex items-center gap-1.5 opacity-40">
+                <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">System Secure</span>
+             </div>
+             <p className="text-[10px] text-neutral-700 font-bold uppercase tracking-[0.2em]">
+                Deep Assistant <span className="text-neutral-800 mx-1">/</span> V2.5 Professional
+             </p>
+          </div>
         </div>
       </div>
     </div>

@@ -31,10 +31,12 @@ exports.sendMessage = asyncHandler(async (req, res, next) => {
       ? await Chat.getSessionContext(req.user._id, sessionId, 5)
       : [];
 
-    // Send to n8n with context
+    // Send to n8n with context and strict RAG instructions
     const n8nResponse = await sendChatToN8n(message, previousChats, {
       userId: req.user._id.toString(),
-      sessionId: sessionId || 'default'
+      sessionId: sessionId || 'default',
+      systemInstructions: "Answer ONLY using the provided document context. If the answer is not contained within the documents, state that you cannot find the information in the current research context. Do not use general knowledge.",
+      strictRAG: true
     });
 
     // Extract answer with robust error handling/fallback support

@@ -57,12 +57,12 @@ api.interceptors.response.use(
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
 export const loginUser = async (email, password) => {
-  const response = await api.post('/auth/login', { email, password });
+  const response = await api.post('/v1/auth/login', { email, password });
   return response.data.data; // { token, user }
 };
 
 export const signupUser = async (name, email, password) => {
-  const response = await api.post('/auth/signup', {
+  const response = await api.post('/v1/auth/signup', {
     name,
     email,
     password,
@@ -74,24 +74,24 @@ export const signupUser = async (name, email, password) => {
 // ─── Chat ────────────────────────────────────────────────────────────────────
 
 export const sendMessage = async (message, sessionId) => {
-  const response = await api.post('/chat', { message, sessionId });
+  const response = await api.post('/v1/chat', { message, sessionId });
   return response.data.data.response;
 };
 
 export const fetchChatHistory = async (page = 1, limit = 50, sessionId = null) => {
   const params = { page, limit };
   if (sessionId) params.sessionId = sessionId;
-  const response = await api.get('/chat/history', { params });
+  const response = await api.get('/v1/chat/history', { params });
   return response.data;
 };
 
 export const deleteChatById = async (chatId) => {
-  const response = await api.delete(`/chat/${chatId}`);
+  const response = await api.delete(`/v1/chat/${chatId}`);
   return response.data;
 };
 
 export const updateChatFeedback = async (chatId, feedback) => {
-  const response = await api.patch(`/chat/${chatId}/feedback`, feedback);
+  const response = await api.patch(`/v1/chat/${chatId}/feedback`, feedback);
   return response.data;
 };
 
@@ -99,22 +99,13 @@ export const updateChatFeedback = async (chatId, feedback) => {
 
 /**
  * Upload a PDF file — ingested into n8n → Drive → Qdrant → MongoDB
- *
- * CRITICAL: Do NOT manually set 'Content-Type': 'multipart/form-data'.
- * Without the auto-generated boundary, multer cannot parse the body.
- *
- * Returns the full axios response so ChatContext can read response.data
- * which is: { success, message, data: { uploadId, filename, status, driveFileId } }
  */
 export const uploadFile = async (file) => {
   const formData = new FormData();
   formData.append('file', file);
-
-  // Return the full axios response object — do NOT unwrap here.
-  // ChatContext reads: response.data.success and response.data.data.uploadId
   return api.post('/v1/uploads', formData, {
     headers: {
-      'Content-Type': undefined, // let axios set multipart + boundary automatically
+      'Content-Type': undefined, 
     },
     timeout: 120000,
   });
@@ -134,6 +125,18 @@ export const fetchUploadHistory = async (page = 1, limit = 50) => {
 export const deleteDocument = async (uploadId) => {
   const response = await api.delete(`/v1/uploads/${uploadId}`);
   return response.data;
+};
+
+// ─── Contact ────────────────────────────────────────────────────────────────
+export const sendContactForm = async (formData) => {
+  const response = await api.post('/v1/contact', formData);
+  return response.data;
+};
+
+// ─── Analytics ───────────────────────────────────────────────────────────────
+export const fetchAnalyticsDataApi = async () => {
+  const response = await api.get('/v1/analytics');
+  return response.data; // { success, data }
 };
 
 export default api;

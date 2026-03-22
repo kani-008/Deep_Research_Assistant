@@ -12,10 +12,11 @@ import { useChat } from '../context/ChatContext';
 import { useAuth } from '../context/AuthContext';
 
 // ── Settings Panel ─────────────────────────────────────────────────────────────
-const SettingsPanel = ({ onClose, user, logout, navigate }) => {
+const SettingsPanel = ({ onClose, user, logout, navigate, documents }) => {
   const [notifications, setNotifications] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [compactMode, setCompactMode] = useState(false);
+  const [language, setLanguage] = useState('English (US)');
 
   const handleLogout = () => {
     onClose();
@@ -25,7 +26,7 @@ const SettingsPanel = ({ onClose, user, logout, navigate }) => {
 
   const Toggle = ({ value, onChange }) => (
     <button
-      onClick={() => onChange(!value)}
+      onClick={(e) => { e.stopPropagation(); onChange(!value); }}
       className={`relative w-8 h-4.5 rounded-full transition-all flex-shrink-0 ${
         value ? 'bg-violet-600' : 'bg-white/[0.1]'
       }`}
@@ -37,88 +38,97 @@ const SettingsPanel = ({ onClose, user, logout, navigate }) => {
     </button>
   );
 
+  const docCount = documents?.length || 0;
+  const docLimit = 10;
+  const usagePercent = Math.min((docCount / docLimit) * 100, 100);
+
   const sections = [
     {
-      label: 'Account',
+      label: 'Account & Plan',
       items: [
         {
           icon: User,
-          label: 'Profile',
-          sub: user?.email || 'Manage your profile',
+          label: 'Profile Settings',
+          sub: user?.email || 'Manage your account',
           action: () => {},
-          right: <ExternalLink size={12} className="text-neutral-700" />,
-        },
-        {
-          icon: Shield,
-          label: 'Security',
-          sub: 'Password & 2FA',
-          action: () => {},
-          right: <ExternalLink size={12} className="text-neutral-700" />,
+          right: <ChevronRight size={12} className="text-neutral-700 hover:text-neutral-400" />,
         },
         {
           icon: Zap,
-          label: 'Upgrade Plan',
-          sub: 'You are on Free',
+          label: 'Current Plan',
+          sub: 'Free Researcher',
           action: () => {},
           right: (
-            <span className="text-[10px] font-bold bg-amber-400/10 text-amber-400 border border-amber-400/20 px-1.5 py-0.5 rounded-full whitespace-nowrap">
-              PRO
+            <span className="text-[0.65rem] font-black bg-gradient-to-r from-violet-500/20 to-purple-500/20 text-violet-400 border border-violet-500/30 px-2 py-0.5 rounded-full">
+              FREE
             </span>
           ),
         },
       ],
     },
     {
-      label: 'Preferences',
+      label: 'Usage (RAG Storage)',
+      custom: (
+        <div className="px-4 py-2 space-y-2">
+          <div className="flex items-center justify-between text-[0.7rem] font-bold">
+            <span className="text-neutral-500 uppercase tracking-widest">Documents</span>
+            <span className="text-white">{docCount} <span className="text-neutral-600">/ {docLimit}</span></span>
+          </div>
+          <div className="h-1.5 w-full bg-white/[0.05] rounded-full overflow-hidden border border-white/[0.05]">
+            <div 
+              className={`h-full transition-all duration-700 ease-out rounded-full ${
+                usagePercent > 80 ? 'bg-amber-500' : 'bg-gradient-to-r from-violet-600 to-purple-600'
+              }`}
+              style={{ width: `${usagePercent}%` }}
+            />
+          </div>
+        </div>
+      )
+    },
+    {
+      label: 'General Preferences',
       items: [
         {
+          icon: Globe,
+          label: 'Display Language',
+          sub: language,
+          action: () => {
+            const langs = ['English (US)', 'Spanish', 'French', 'German'];
+            const idx = langs.indexOf(language);
+            setLanguage(langs[(idx + 1) % langs.length]);
+          },
+          right: <RefreshCw size={11} className="text-neutral-700" />,
+        },
+        {
           icon: Bell,
-          label: 'Notifications',
-          sub: 'Upload & answer alerts',
+          label: 'Email Notifications',
+          sub: 'Processing alerts',
           action: () => setNotifications(p => !p),
           right: <Toggle value={notifications} onChange={setNotifications} />,
         },
         {
-          icon: Volume2,
-          label: 'Sound effects',
-          sub: 'Play sounds on events',
-          action: () => setSoundEnabled(p => !p),
-          right: <Toggle value={soundEnabled} onChange={setSoundEnabled} />,
-        },
-        {
           icon: Moon,
-          label: 'Compact mode',
-          sub: 'Denser sidebar layout',
+          label: 'Dynamic Appearance',
+          sub: compactMode ? 'Compact' : 'Standard',
           action: () => setCompactMode(p => !p),
           right: <Toggle value={compactMode} onChange={setCompactMode} />,
         },
       ],
     },
     {
-      label: 'Resources',
+      label: 'Integrations & Support',
       items: [
         {
-          icon: BookOpen,
-          label: 'Documentation',
-          sub: 'Guides and API reference',
-          action: () => window.open('#', '_blank'),
+          icon: Shield,
+          label: 'API Keys',
+          sub: 'Manage access tokens',
+          action: () => {},
           right: <ExternalLink size={12} className="text-neutral-700" />,
         },
         {
-          icon: Keyboard,
-          label: 'Keyboard shortcuts',
-          sub: 'View all shortcuts',
-          action: () => {},
-          right: (
-            <span className="text-[10px] font-mono text-neutral-600 bg-white/[0.05] px-1.5 py-0.5 rounded border border-white/[0.06]">
-              ?
-            </span>
-          ),
-        },
-        {
           icon: HelpCircle,
-          label: 'Help & Support',
-          sub: 'Chat with our team',
+          label: 'Support Center',
+          sub: 'Talk to human',
           action: () => {},
           right: <ExternalLink size={12} className="text-neutral-700" />,
         },
@@ -127,49 +137,38 @@ const SettingsPanel = ({ onClose, user, logout, navigate }) => {
   ];
 
   return (
-    <div className="absolute bottom-full left-0 right-0 mb-2 z-[60] mx-2">
+    <div className="absolute bottom-full left-0 right-0 mb-3 z-[60] mx-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
       {/* Panel */}
-      <div className="bg-[#0f0f1e] border border-white/[0.1] rounded-2xl shadow-2xl shadow-black/60 overflow-hidden">
+      <div className="bg-[#0f0f1e] border border-white/[0.1] rounded-2xl shadow-2xl shadow-black/80 overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
+        <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/[0.06] bg-white/[0.02]">
           <div className="flex items-center gap-2">
-            <Settings size={13} className="text-neutral-500" />
-            <span className="text-[12px] font-bold text-neutral-300 tracking-wide">Settings</span>
+            <div className="w-5 h-5 rounded-lg bg-violet-600/20 flex items-center justify-center border border-violet-500/20">
+              <Settings size={12} className="text-violet-400" />
+            </div>
+            <span className="text-xs font-bold text-neutral-200 tracking-wide">Settings</span>
           </div>
           <button onClick={onClose}
-            className="p-1 hover:bg-white/[0.07] rounded-lg text-neutral-600 hover:text-neutral-300 transition-colors">
-            <X size={13} />
+            className="p-1.5 hover:bg-white/[0.07] rounded-lg text-neutral-600 hover:text-neutral-300 transition-colors">
+            <X size={14} />
           </button>
         </div>
 
-        {/* User summary */}
-        <div className="px-4 py-3 border-b border-white/[0.06] flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center font-bold text-[12px] flex-shrink-0 ring-2 ring-violet-500/20">
-            {user?.name ? user.name.slice(0, 2).toUpperCase() : 'U'}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-semibold text-white truncate">{user?.name || 'User'}</p>
-            <p className="text-[10px] text-neutral-500 truncate">{user?.email || ''}</p>
-          </div>
-          <span className="text-[9px] font-black uppercase tracking-widest text-neutral-600 bg-white/[0.05] border border-white/[0.07] px-2 py-1 rounded-full flex-shrink-0">
-            Free
-          </span>
-        </div>
-
-        {/* Sections */}
-        <div className="overflow-y-auto max-h-72 py-2">
-          {sections.map(({ label, items }) => (
-            <div key={label}>
-              <p className="text-[9px] font-bold text-neutral-700 uppercase tracking-[0.15em] px-4 pt-3 pb-1.5">{label}</p>
-              {items.map(({ icon: Icon, label: itemLabel, sub, action, right }) => (
+        {/* Sections Scrollable Area */}
+        <div className="overflow-y-auto max-h-[60vh] sm:max-h-96 py-3 space-y-1 custom-scrollbar">
+          {sections.map(({ label, items, custom }, idx) => (
+            <div key={idx} className="mb-2">
+              <p className="text-[0.6rem] font-black text-neutral-700 uppercase tracking-[0.2em] px-4 pt-2 pb-1.5">{label}</p>
+              {custom}
+              {items?.map(({ icon: Icon, label: itemLabel, sub, action, right }) => (
                 <button key={itemLabel} onClick={action}
                   className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.04] transition-colors text-left group">
-                  <div className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center flex-shrink-0 group-hover:border-white/[0.1] transition-colors">
-                    <Icon size={13} className="text-neutral-500" />
+                  <div className="w-8 h-8 rounded-xl bg-white/[0.03] border border-white/[0.05] flex items-center justify-center flex-shrink-0 group-hover:border-white/[0.15] group-hover:bg-white/[0.06] transition-all">
+                    <Icon size={14} className="text-neutral-500 group-hover:text-neutral-300" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-medium text-neutral-200 truncate">{itemLabel}</p>
-                    <p className="text-[10px] text-neutral-600 truncate">{sub}</p>
+                    <p className="text-xs font-bold text-neutral-200 truncate group-hover:text-white transition-colors">{itemLabel}</p>
+                    <p className="text-[0.65rem] text-neutral-600 truncate group-hover:text-neutral-500 transition-colors font-medium mt-0.5">{sub}</p>
                   </div>
                   <div className="flex-shrink-0">{right}</div>
                 </button>
@@ -178,30 +177,43 @@ const SettingsPanel = ({ onClose, user, logout, navigate }) => {
           ))}
         </div>
 
-        {/* Footer — Sign out */}
-        <div className="border-t border-white/[0.06] px-3 py-2.5">
+        {/* Footer — Profile Summary & Sign out */}
+        <div className="border-t border-white/[0.06] bg-white/[0.02] p-2 space-y-1">
           <button onClick={handleLogout}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-red-500/[0.08] border border-transparent hover:border-red-500/20 transition-all group">
-            <div className="w-7 h-7 rounded-lg bg-red-500/[0.08] flex items-center justify-center flex-shrink-0">
-              <LogOut size={13} className="text-red-500/70 group-hover:text-red-400 transition-colors" />
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-red-500/[0.08] group transition-all">
+            <div className="w-8 h-8 rounded-xl bg-red-500/[0.1] border border-red-500/10 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+              <LogOut size={14} className="text-red-500/70 group-hover:text-red-400" />
             </div>
             <div className="flex-1 text-left">
-              <p className="text-[12px] font-medium text-red-500/70 group-hover:text-red-400 transition-colors">Sign out</p>
-              <p className="text-[10px] text-neutral-700">End your session</p>
+              <p className="text-xs font-bold text-red-500/70 group-hover:text-red-400">Sign out</p>
+              <p className="text-[0.65rem] text-neutral-700 font-medium">Clear session data</p>
             </div>
+            <ChevronRight size={14} className="text-neutral-800 group-hover:text-red-500/40" />
           </button>
         </div>
       </div>
 
-      {/* Arrow pointer */}
-      <div className="absolute -bottom-1.5 left-6 w-3 h-3 bg-[#0f0f1e] border-r border-b border-white/[0.1] rotate-45 z-[-1]" />
+      {/* Popover Arrow */}
+      <div className="absolute -bottom-1.5 left-8 w-3 h-3 bg-[#0f0f1e] border-r border-b border-white/[0.1] rotate-45 z-[-1]" />
     </div>
   );
 };
 
+import { motion, AnimatePresence } from 'framer-motion';
+
 // ── Sidebar ────────────────────────────────────────────────────────────────────
 const Sidebar = ({ isOpen, onClose }) => {
-  const { sessions, currentSessionId, setCurrentSessionId, createNewChat, deleteSession, loadSessions, refreshSessions } = useChat();
+  const { 
+    sessions, 
+    currentSessionId, 
+    setCurrentSessionId, 
+    createNewChat, 
+    deleteSession, 
+    loadSessions, 
+    refreshSessions,
+    documents,
+    loadDocuments
+  } = useChat();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -209,8 +221,12 @@ const Sidebar = ({ isOpen, onClose }) => {
   const settingsRef = useRef(null);
 
   useEffect(() => {
-    (async () => { setLoading(true); await loadSessions(); setLoading(false); })();
-  }, [loadSessions]);
+    (async () => { 
+      setLoading(true); 
+      await Promise.all([loadSessions(), loadDocuments()]);
+      setLoading(false); 
+    })();
+  }, [loadSessions, loadDocuments]);
 
   // Close settings panel when clicking outside
   useEffect(() => {
@@ -236,7 +252,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   const handleRefresh = async () => {
     refreshSessions();
     setLoading(true);
-    await loadSessions();
+    await Promise.all([loadSessions(), loadDocuments()]);
     setLoading(false);
   };
 
@@ -246,28 +262,48 @@ const Sidebar = ({ isOpen, onClose }) => {
     { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   ];
 
+  const sidebarVariants = {
+    open: { 
+      x: 0, 
+      transition: { type: 'spring', stiffness: 300, damping: 30 } 
+    },
+    closed: { 
+      x: '-100%', 
+      transition: { type: 'spring', stiffness: 300, damping: 30 } 
+    }
+  };
+
   return (
     <>
       {/* Mobile backdrop */}
-      {isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden" onClick={onClose} />
-      )}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden" 
+            onClick={onClose} 
+          />
+        )}
+      </AnimatePresence>
 
-      <aside
+      <motion.aside
+        initial={false}
+        animate={isOpen ? 'open' : 'closed'}
+        variants={sidebarVariants}
         className={`
           fixed inset-y-0 left-0 z-50 lg:relative
-          flex flex-col w-64 h-screen flex-shrink-0
+          flex flex-col w-72 lg:w-64 h-screen flex-shrink-0
           bg-[#0a0a16] border-r border-white/[0.05]
-          transition-transform duration-300 ease-in-out
-          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-          lg:translate-x-0
+          shadow-2xl lg:shadow-none
         `}
       >
         {/* Logo row */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-white/[0.04] flex-shrink-0">
           <button onClick={() => navigate('/')} className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center font-black text-sm shadow-lg shadow-violet-500/20 flex-shrink-0">D</div>
-            <span className="font-extrabold text-[13px] tracking-tight text-white/90 truncate">Deep Research</span>
+            <span className="font-extrabold text-sm tracking-tight text-white/90 truncate">Deep Research</span>
           </button>
           <button onClick={onClose} className="p-1.5 hover:bg-white/[0.07] rounded-lg text-neutral-600 hover:text-white transition-colors lg:hidden flex-shrink-0">
             <X size={16} />
@@ -277,20 +313,20 @@ const Sidebar = ({ isOpen, onClose }) => {
         {/* New Chat */}
         <div className="px-3 pt-3 pb-2 flex-shrink-0">
           <button onClick={handleNewChat}
-            className="w-full flex items-center justify-center gap-2 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-[13px] font-semibold rounded-xl transition-all shadow-lg shadow-violet-600/15">
-            <Plus size={15} /> New Chat
+            className="w-full flex items-center justify-center gap-2 py-2.5 bg-violet-600 hover:bg-violet-500 text-white text-[13px] font-black rounded-xl transition-all shadow-lg shadow-violet-600/15 group active:scale-[0.98]">
+            <Plus size={15} className="group-hover:rotate-90 transition-transform duration-300" /> New Chat
           </button>
         </div>
 
         {/* Navigation */}
         <nav className="px-3 pb-3 border-b border-white/[0.04] flex-shrink-0">
-          <p className="text-[10px] font-bold text-neutral-700 uppercase tracking-[0.15em] px-2 py-2">Navigation</p>
+          <p className="text-[0.65rem] font-bold text-neutral-700 uppercase tracking-[0.15em] px-2 py-2">Navigation</p>
           {navItems.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to} to={to}
               onClick={() => { if (window.innerWidth < 1024) onClose(); }}
               className={({ isActive }) =>
-                `flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all mb-0.5 ${
+                `flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all mb-0.5 ${
                   isActive
                     ? 'bg-violet-500/10 text-violet-300 ring-1 ring-violet-500/20'
                     : 'text-neutral-500 hover:bg-white/[0.04] hover:text-neutral-300'
@@ -304,9 +340,9 @@ const Sidebar = ({ isOpen, onClose }) => {
         </nav>
 
         {/* Recent chats */}
-        <div className="flex-1 overflow-y-auto px-3 py-3 min-h-0">
+        <div className="flex-1 overflow-y-auto px-3 py-3 min-h-0 custom-scrollbar">
           <div className="flex items-center justify-between px-2 mb-2">
-            <p className="text-[10px] font-bold text-neutral-700 uppercase tracking-[0.15em]">Recent Chats</p>
+            <p className="text-[0.65rem] font-bold text-neutral-700 uppercase tracking-[0.15em]">Recent Chats</p>
             <button onClick={handleRefresh} className="p-1 hover:bg-white/[0.05] rounded-lg text-neutral-700 hover:text-neutral-500 transition-colors">
               <RefreshCw size={11} className={loading ? 'animate-spin' : ''} />
             </button>
@@ -314,7 +350,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           {loading ? (
             <div className="flex flex-col items-center py-8 gap-2">
               <RefreshCw size={14} className="animate-spin text-neutral-700" />
-              <p className="text-[11px] text-neutral-700">Loading…</p>
+              <p className="text-[0.7rem] text-neutral-700">Loading…</p>
             </div>
           ) : sessions.length > 0 ? (
             <div className="space-y-0.5">
@@ -329,7 +365,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                   }`}
                 >
                   <MessageSquare size={12} className="flex-shrink-0" />
-                  <span className="text-[12px] truncate flex-1 font-medium">{s.title}</span>
+                  <span className="text-xs truncate flex-1 font-medium">{s.title}</span>
                   <button
                     onClick={e => { e.stopPropagation(); deleteSession(s.sessionId); }}
                     className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 transition-all flex-shrink-0 rounded">
@@ -339,7 +375,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               ))}
             </div>
           ) : (
-            <p className="text-center text-[11px] text-neutral-700 py-8">No chats yet</p>
+            <p className="text-center text-[0.7rem] text-neutral-700 py-8 italic font-light">No chats yet</p>
           )}
         </div>
 
@@ -353,49 +389,36 @@ const Sidebar = ({ isOpen, onClose }) => {
               user={user}
               logout={logout}
               navigate={navigate}
+              documents={documents}
             />
           )}
 
           {/* User row */}
-          <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-white/[0.08] transition-colors">
+          <button
+            onClick={() => setSettingsOpen(p => !p)}
+            className={`w-full flex items-center gap-2.5 p-2 rounded-xl transition-all border ${
+              settingsOpen
+                ? 'bg-white/[0.05] border-white/[0.1] shadow-xl'
+                : 'bg-white/[0.02] border-white/[0.04] hover:border-white/[0.1] hover:bg-white/[0.04]'
+            }`}
+          >
             {/* Avatar */}
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center font-bold text-[11px] flex-shrink-0 ring-2 ring-violet-500/20">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center font-bold text-[0.7rem] flex-shrink-0 ring-1 ring-white/10 shadow-lg">
               {user?.name ? user.name.slice(0, 2).toUpperCase() : 'U'}
             </div>
 
             {/* Name + plan */}
-            <div className="flex-1 min-w-0">
-              <p className="text-[12px] font-semibold text-white truncate leading-tight">
-                {user?.name || user?.email || 'User'}
+            <div className="flex-1 min-w-0 text-left">
+              <p className="text-xs font-bold text-white truncate leading-tight">
+                {user?.name?.split(' ')[0] || 'Researcher'}
               </p>
-              <p className="text-[10px] text-neutral-600 leading-tight">Free Plan</p>
+              <p className="text-[0.65rem] text-neutral-600 leading-tight font-medium uppercase tracking-tighter">Free Tier</p>
             </div>
 
-            {/* Action buttons */}
-            <div className="flex items-center gap-0.5 flex-shrink-0">
-              {/* Sign out */}
-              <button
-                onClick={() => { logout(); navigate('/login'); }}
-                className="p-1.5 hover:bg-red-500/10 rounded-lg text-neutral-600 hover:text-red-400 transition-all"
-                title="Sign out">
-                <LogOut size={14} />
-              </button>
-
-              {/* Settings toggle */}
-              <button
-                onClick={() => setSettingsOpen(p => !p)}
-                className={`p-1.5 rounded-lg transition-all ${
-                  settingsOpen
-                    ? 'bg-violet-500/15 text-violet-400 ring-1 ring-violet-500/25'
-                    : 'text-neutral-600 hover:bg-white/[0.07] hover:text-neutral-300'
-                }`}
-                title="Settings">
-                <Settings size={14} className={settingsOpen ? 'rotate-45 transition-transform duration-300' : 'transition-transform duration-300'} />
-              </button>
-            </div>
-          </div>
+            <Settings size={14} className={`text-neutral-600 transition-all duration-500 ${settingsOpen ? 'rotate-180 text-violet-400' : 'group-hover:text-neutral-400'}`} />
+          </button>
         </div>
-      </aside>
+      </motion.aside>
     </>
   );
 };
@@ -404,6 +427,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 const Header = ({ onToggle }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { createNewChat } = useChat();
 
   const crumb = () => {
     const p = location.pathname;
@@ -414,6 +438,11 @@ const Header = ({ onToggle }) => {
     return '';
   };
 
+  const handleAskAI = () => {
+    const id = createNewChat();
+    navigate(`/chat/${id}`);
+  };
+
   return (
     <header className="h-14 border-b border-white/[0.05] bg-[#07070f]/80 backdrop-blur-xl sticky top-0 z-30 flex items-center justify-between px-3 sm:px-4 flex-shrink-0">
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -421,24 +450,24 @@ const Header = ({ onToggle }) => {
           className="p-2 hover:bg-white/[0.06] rounded-xl transition-colors text-neutral-500 hover:text-white flex-shrink-0">
           <Menu size={18} />
         </button>
-        <div className="hidden sm:flex items-center gap-1.5 text-[13px] min-w-0">
+        <div className="hidden sm:flex items-center gap-1.5 text-sm min-w-0">
           <span className="text-neutral-700 truncate">Deep Research</span>
           <ChevronRight size={12} className="text-neutral-700 flex-shrink-0" />
           <span className="text-neutral-300 font-medium truncate">{crumb()}</span>
         </div>
-        <span className="sm:hidden text-[13px] font-semibold text-neutral-300 truncate">{crumb()}</span>
+        <span className="sm:hidden text-sm font-semibold text-neutral-300 truncate">{crumb()}</span>
       </div>
 
       <div className="flex items-center gap-2 flex-shrink-0">
         <div className="relative hidden md:block">
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-600 pointer-events-none" />
           <input type="text" placeholder="Search…"
-            className="bg-white/[0.04] border border-white/[0.07] rounded-xl pl-8 pr-4 py-1.5 text-[12px] text-neutral-400 placeholder:text-neutral-700 outline-none focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/10 transition-all w-44 lg:w-60" />
+            className="bg-white/[0.04] border border-white/[0.07] rounded-xl pl-8 pr-4 py-1.5 text-xs text-neutral-400 placeholder:text-neutral-700 outline-none focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/10 transition-all w-44 lg:w-60" />
         </div>
-        <button onClick={() => navigate('/chat')}
-          className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-white text-[12px] font-semibold px-3 py-2 rounded-xl transition-all shadow-md shadow-violet-600/20">
+        <button onClick={handleAskAI}
+          className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md shadow-violet-600/20 active:scale-[0.98]">
           <Sparkles size={13} />
-          <span className="hidden sm:inline">Ask AI</span>
+          <span>Ask AI</span>
         </button>
       </div>
     </header>
@@ -447,21 +476,35 @@ const Header = ({ onToggle }) => {
 
 // ── Layout ─────────────────────────────────────────────────────────────────────
 const Layout = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1024;
+    }
+    return true;
+  });
 
   useEffect(() => {
-    const fn = () => {
-      setSidebarOpen(window.innerWidth >= 1024);
+    const handleResize = () => {
+      // If we cross the 1024px threshold, reset to default state
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(true);
+      } else if (sidebarOpen && window.innerWidth < 1024) {
+        // Automatically close when shrinking to mobile if it was explicitly open
+        setSidebarOpen(false);
+      }
     };
-    fn();
-    window.addEventListener('resize', fn);
-    return () => window.removeEventListener('resize', fn);
-  }, []);
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [sidebarOpen]);
 
   return (
     <div className="flex h-screen bg-[#07070f] text-neutral-200 overflow-hidden">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      
+      <div className={`flex-1 flex flex-col min-w-0 overflow-hidden transition-all duration-300 ${
+        sidebarOpen && window.innerWidth >= 1024 ? 'lg:ml-0' : 'lg:ml-[-256px]'
+      }`}>
         <Header onToggle={() => setSidebarOpen(p => !p)} />
         <main className="flex-1 overflow-y-auto overscroll-contain">
           {children}
