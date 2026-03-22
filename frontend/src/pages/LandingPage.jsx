@@ -29,11 +29,7 @@ const LandingPage = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (!isAuthenticated) {
-      navigate('/signup', { state: { returnTo: '/chat', initialPrompt: query } });
-    } else {
-      navigate('/chat', { state: { initialPrompt: query } });
-    }
+    navigate('/chat', { state: { initialPrompt: query } });
   };
 
   const features = [
@@ -98,14 +94,9 @@ const LandingPage = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-2">
-            {!isAuthenticated ? (
-              <>
-                <Link to="/login" className="text-sm text-neutral-400 hover:text-white px-4 py-2 rounded-lg hover:bg-white/[0.05] transition-all font-medium">Sign in</Link>
-                <Link to="/signup" className="text-sm font-bold bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg shadow-violet-600/20">Get started free</Link>
-              </>
-            ) : (
-              <Link to="/chat" className="text-sm font-bold bg-violet-600 hover:bg-violet-500 text-white px-5 py-2 rounded-xl transition-all shadow-lg shadow-violet-600/20">Go to Research AI</Link>
-            )}
+            <Link to="/chat" className="text-sm font-bold bg-violet-600 hover:bg-violet-500 text-white px-5 py-2 rounded-xl transition-all shadow-lg shadow-violet-600/20">
+              {isAuthenticated ? 'Open Research' : 'Try Free'}
+            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -122,17 +113,10 @@ const LandingPage = () => {
                 className="block text-sm text-neutral-400 hover:text-white py-2.5 px-2 rounded-lg hover:bg-white/[0.04] transition-all">{l}</a>
             ))}
             <div className="flex gap-2 pt-3 border-t border-white/[0.06] mt-2">
-              {!isAuthenticated ? (
-                <>
-                  <Link to="/login" onClick={() => setMobileOpen(false)}
-                    className="flex-1 text-center text-sm border border-white/[0.1] rounded-xl py-2.5 text-neutral-300 font-medium hover:bg-white/[0.04] transition-all">Sign in</Link>
-                  <Link to="/signup" onClick={() => setMobileOpen(false)}
-                    className="flex-1 text-center text-sm bg-violet-600 hover:bg-violet-500 rounded-xl py-2.5 text-white font-bold transition-all">Get started</Link>
-                </>
-              ) : (
-                <Link to="/chat" onClick={() => setMobileOpen(false)}
-                  className="flex-1 text-center text-sm bg-violet-600 hover:bg-violet-500 rounded-xl py-2.5 text-white font-bold transition-all">Open Research</Link>
-              )}
+              <Link to="/chat" onClick={() => setMobileOpen(false)}
+                className="flex-1 text-center text-sm bg-violet-600 hover:bg-violet-500 rounded-xl py-2.5 text-white font-bold transition-all">
+                {isAuthenticated ? 'Open Research' : 'Try Free'}
+              </Link>
             </div>
           </div>
         )}
@@ -335,7 +319,7 @@ const LandingPage = () => {
                 </div>
 
                 <button 
-                  onClick={() => navigate(isAuthenticated ? '/chat' : '/signup')}
+                  onClick={() => navigate('/chat')}
                   className={`w-full py-4 rounded-2xl text-[13px] font-black transition-all active:scale-[0.98] ${
                     plan.highlight 
                       ? 'bg-violet-600 hover:bg-violet-500 text-white shadow-xl shadow-violet-600/20' 
@@ -394,12 +378,12 @@ const LandingPage = () => {
                 Join thousands of power users who are already getting smarter with Deep Research. Free plan available, no strings attached.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link to={isAuthenticated ? "/chat" : "/signup"} className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white text-black font-black px-10 py-4 rounded-2xl transition-all hover:bg-neutral-200 shadow-2xl shadow-white/10 active:scale-[0.98]">
-                  {isAuthenticated ? 'Open Research Chat' : 'Get Started Free'} <ArrowRight size={18} />
+                <Link to="/chat" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white text-black font-black px-10 py-4 rounded-2xl transition-all hover:bg-neutral-200 shadow-2xl shadow-white/10 active:scale-[0.98]">
+                  {isAuthenticated ? 'Continue Research' : 'Try AI Chat Now'} <ArrowRight size={18} />
                 </Link>
                 {!isAuthenticated && (
-                  <Link to="/login" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-white font-bold px-10 py-4 rounded-2xl transition-all active:scale-[0.98]">
-                    Sign In
+                  <Link to="/signup" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-white font-bold px-10 py-4 rounded-2xl transition-all active:scale-[0.98]">
+                    Create Free Account
                   </Link>
                 )}
               </div>

@@ -9,6 +9,7 @@ import {
   deleteDocument as deleteDocumentApi,
   fetchUploadHistory,
   fetchChatHistory,
+  deleteChatSession as deleteChatSessionApi,
   sendMessage as sendMessageApi
 } from '../api/api';
 import toast from 'react-hot-toast';
@@ -89,9 +90,19 @@ export const ChatProvider = ({ children }) => {
     );
   }, []);
 
-  const deleteSession = useCallback((sessionId) => {
+  const deleteSession = useCallback(async (sessionId) => {
+    // Optimistic removal
     setSessions((prev) => prev.filter((s) => s.sessionId !== sessionId));
     if (currentSessionId === sessionId) setCurrentSessionId(null);
+
+    try {
+      await deleteChatSessionApi(sessionId);
+      toast.success('Chat history cleared from cloud');
+    } catch (err) {
+      console.error('Failed to delete cloud session:', err.message);
+      toast.error('Failed to sync deletion: ' + err.message);
+      setSessionsLoaded(false); // trigger re-fetch to restore state if it failed
+    }
   }, [currentSessionId]);
 
   const refreshSessions = useCallback(() => setSessionsLoaded(false), []);

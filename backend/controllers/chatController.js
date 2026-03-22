@@ -13,103 +13,81 @@ const logger = require('../utils/logger');
  */
 exports.sendMessage = asyncHandler(async (req, res, next) => {
   const { message, sessionId } = req.body;
+  const isGuest = !req.user;
 
   // Validation
   if (!message || message.trim().length === 0) {
     return next(createErrors.badRequest('Message cannot be empty'));
   }
 
-  if (message.length > 5000) {
-    return next(createErrors.badRequest('Message exceeds maximum length of 5000 characters'));
-  }
-
   try {
     const startTime = Date.now();
+    const userIdStr = isGuest ? 'guest-demo-user' : req.user._id.toString();
 
-    // Get previous chat context for this session
-    const previousChats = sessionId
+    // Get previous chat context (only for authenticated users)
+    const previousChats = (!isGuest && sessionId)
       ? await Chat.getSessionContext(req.user._id, sessionId, 5)
       : [];
 
     // Send to n8n with context and strict RAG instructions
     const n8nResponse = await sendChatToN8n(message, previousChats, {
-      userId: req.user._id.toString(),
-      sessionId: sessionId || 'default',
+      userId: userIdStr,
+      sessionId: sessionId || 'demo-session',
       systemInstructions: "Answer ONLY using the provided document context. If the answer is not contained within the documents, state that you cannot find the information in the current research context. Do not use general knowledge.",
+      isGuest,
       strictRAG: true
     });
 
-    // Extract answer with robust error handling/fallback support
+    // Extract answer
     let answer = "I'm sorry, I'm having trouble connecting to my research engine right now.";
-    
     if (n8nResponse.success) {
       const raw = n8nResponse.data;
-
-      // n8n "Text" mode returns a plain string directly
-      if (typeof raw === 'string' && raw.trim()) {
-        answer = raw.trim();
-      } else if (typeof raw === 'object' && raw !== null) {
-        // Fallback: handle all object shapes n8n might return
-        const answerRaw =
-          raw.output ||
-          raw.answer ||
-          raw.response ||
-          raw.text ||
-          raw.message ||
-          raw.data;
-
-        if (typeof answerRaw === 'string' && answerRaw.trim()) {
-          answer = answerRaw.trim();
-        } else if (typeof answerRaw === 'object' && answerRaw !== null) {
-          // Double-nested object — extract string value
-          answer = answerRaw.output || answerRaw.answer || answerRaw.response || answerRaw.text || JSON.stringify(answerRaw);
-        } else {
-          answer = JSON.stringify(raw);
-        }
+      if (typeof raw === 'string') answer = raw.trim();
+      else if (typeof raw === 'object' && raw !== null) {
+        answer = raw.output || raw.answer || raw.response || raw.text || raw.message || JSON.stringify(raw);
       }
-    } else if (n8nResponse.fallback && n8nResponse.message) {
+    } else if (n8nResponse.fallback) {
       answer = n8nResponse.message;
     }
 
-    // Store chat in database (answer is now guaranteed to be a valid string)
-    const chatEntry = await Chat.create({
-      userId: req.user._id,
-      sessionId: sessionId || new Date().getTime().toString(),
-      question: message.trim(),
-      answer: answer,
-      metadata: {
-        processingTime: n8nResponse.processingTime,
-        model: 'n8n-rag'
-      },
-      status: n8nResponse.success ? 'completed' : 'failed'
-    });
+    let chatId = null;
+    let finalSessionId = sessionId || (isGuest ? 'demo-' + Date.now() : Date.now().toString());
 
-    const processingTime = Date.now() - startTime;
+    // Store in DB ONLY if authenticated
+    if (!isGuest) {
+      const chatEntry = await Chat.create({
+        userId: req.user._id,
+        sessionId: finalSessionId,
+        question: message.trim(),
+        answer: answer,
+        metadata: { processingTime: n8nResponse.processingTime, model: 'n8n-rag' },
+        status: n8nResponse.success ? 'completed' : 'failed'
+      });
+      chatId = chatEntry._id;
+      finalSessionId = chatEntry.sessionId;
+      
+      logger.info('Chat message saved to cloud', { userId: req.user._id, chatId });
+    } else {
+      logger.info('Guest demo message processed (not saved)', { sessionId: finalSessionId });
+    }
 
-    logger.info('Chat message processed', {
-      userId: req.user._id,
-      chatId: chatEntry._id,
-      processingTime
-    });
+    const totalTime = Date.now() - startTime;
 
     res.status(200).json({
       success: true,
-      message: 'Message processed successfully',
+      message: isGuest ? 'Guest demo response generated' : 'Message processed successfully',
       data: {
         response: answer,
-        chatId: chatEntry._id,
-        sessionId: chatEntry.sessionId,
-        processingTime,
-        metadata: chatEntry.metadata
+        chatId,
+        sessionId: finalSessionId,
+        processingTime: totalTime,
+        isGuest,
+        warning: isGuest ? 'This is a demo session. Register to save your research history.' : null
       }
     });
   } catch (error) {
-    logger.error('Chat processing error', {
-      userId: req.user._id,
-      error: error.message
-    });
-
-    return next(createErrors.serverError('Failed to process chat message'));
+    logger.error('Chat processing error', { userId: isGuest ? 'GUEST' : req.user?._id, error: error.message });
+    return next(createErrors.serverError('Failed to process research query'));
   }
 });
 
@@ -207,7 +185,7 @@ exports.updateFeedback = asyncHandler(async (req, res, next) => {
 });
 
 /**
- * Delete chat history
+ * Delete a single chat message
  * DELETE /api/v1/chat/:chatId
  */
 exports.deleteChat = asyncHandler(async (req, res, next) => {
@@ -222,10 +200,35 @@ exports.deleteChat = asyncHandler(async (req, res, next) => {
     return next(createErrors.notFound('Chat message not found'));
   }
 
-  logger.info('Chat deleted', { chatId, userId: req.user._id });
+  logger.info('Chat message deleted', { chatId, userId: req.user._id });
 
   res.status(200).json({
     success: true,
-    message: 'Chat deleted successfully'
+    message: 'Message deleted successfully'
+  });
+});
+
+/**
+ * Delete entire session history
+ * DELETE /api/v1/chat/session/:sessionId
+ */
+exports.deleteSession = asyncHandler(async (req, res, next) => {
+  const { sessionId } = req.params;
+
+  const result = await Chat.deleteMany({
+    userId: req.user._id,
+    sessionId: sessionId
+  });
+
+  if (result.deletedCount === 0) {
+    return next(createErrors.notFound('Session not found or already deleted'));
+  }
+
+  logger.info('Chat session deleted from cloud', { sessionId, userId: req.user._id, deletedCount: result.deletedCount });
+
+  res.status(200).json({
+    success: true,
+    message: `Session deleted successfully. ${result.deletedCount} items removed.`,
+    data: { deletedCount: result.deletedCount }
   });
 });

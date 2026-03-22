@@ -1,22 +1,22 @@
-// ./backend/routes/chatRoutes.js
-
 const express = require('express');
-const { sendMessage, getChatHistory, getChatById, updateFeedback, deleteChat } = require('../controllers/chatController');
-const { protect } = require('../middleware/authMiddleware');
+const { sendMessage, getChatHistory, getChatById, updateFeedback, deleteChat, deleteSession } = require('../controllers/chatController');
+const { protect, optionalAuth } = require('../middleware/authMiddleware');
 const { chatLimiter } = require('../middleware/securityMiddleware');
 
 const router = express.Router();
 
-// All chat routes are protected
-router.use(protect);
+/**
+ * Chat Messaging - Open to both authenticated users and guests for demo
+ */
+router.post('/', optionalAuth, chatLimiter, sendMessage);
 
-// Chat messaging with rate limiting
-router.post('/', chatLimiter, sendMessage);
-
-// Chat history and management
-router.get('/history', getChatHistory);
-router.get('/:chatId', getChatById);
-router.patch('/:chatId/feedback', updateFeedback);
-router.delete('/:chatId', deleteChat);
+/**
+ * Management Routes - Protected
+ */
+router.get('/history', protect, getChatHistory);
+router.get('/:chatId', protect, getChatById);
+router.patch('/:chatId/feedback', protect, updateFeedback);
+router.delete('/:chatId', protect, deleteChat);
+router.delete('/session/:sessionId', protect, deleteSession);
 
 module.exports = router;

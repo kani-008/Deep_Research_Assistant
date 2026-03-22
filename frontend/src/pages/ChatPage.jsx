@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Send, Paperclip, FileText, Copy, ThumbsUp, ThumbsDown,
   Sparkles, RotateCcw, Check, ChevronDown, Plus, 
-  Search, Shield, Zap, Globe, MessageSquare
+  Search, Shield, Zap, Globe, MessageSquare, LogIn, UserPlus
 } from 'lucide-react';
 import { useChat } from '../context/ChatContext';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { updateChatFeedback } from '../api/api';
 
@@ -97,52 +98,57 @@ const MessageBubble = ({ message }) => {
     <motion.div
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`flex w-full mb-8 ${isAI ? 'justify-start' : 'justify-end'}`}
+      className={`flex w-full mb-6 ${isAI ? 'justify-start' : 'justify-end'}`}
     >
-      <div className={`flex gap-3 max-w-[90%] sm:max-w-[85%] ${isAI ? 'flex-row' : 'flex-row-reverse'}`}>
-        {/* Avatar */}
-        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center flex-shrink-0 mt-1 shadow-lg ${
-          isAI 
-            ? 'bg-gradient-to-br from-violet-600 to-indigo-700 shadow-violet-500/20' 
-            : 'bg-white/[0.05] border border-white/10'
-        }`}>
-          {isAI ? <Sparkles size={16} className="text-white" /> : <Shield size={16} className="text-neutral-400" />}
-        </div>
+      <div className={`flex gap-3 max-w-[85%] sm:max-w-[75%] ${isAI ? 'flex-row' : 'flex-row-reverse'}`}>
+        {/* Avatar - Only for AI */}
+        {isAI ? (
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-700 flex items-center justify-center flex-shrink-0 mt-1 shadow-lg shadow-violet-500/20">
+            <Sparkles size={14} className="text-white" />
+          </div>
+        ) : (
+          <div className="w-2" /> // Spacer for user side to align bubbles slightly
+        )}
 
         {/* Bubble Content */}
-        <div className="flex-1 min-w-0 flex flex-col items-start gap-1">
-          <div className={`flex items-center gap-3 px-1 mb-1.5 ${!isAI && 'w-full justify-end'}`}>
-            <span className="text-[10px] font-black text-neutral-600 uppercase tracking-[0.2em]">
-              {isAI ? 'Deep Assistant' : 'You'}
-            </span>
-            <span className="text-[10px] text-neutral-700">
-              {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </span>
-          </div>
+        <div className={`flex-1 min-w-0 flex flex-col ${isAI ? 'items-start' : 'items-end'} gap-1`}>
+          {isAI && (
+            <div className="flex items-center gap-2 px-1 mb-1">
+              <span className="text-[9px] font-black text-neutral-600 uppercase tracking-widest">Assistant</span>
+              <span className="text-[9px] text-neutral-800 font-medium">
+                {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </div>
+          )}
 
           <div className={`
-            relative p-4 sm:p-5 rounded-3xl overflow-hidden shadow-sm
+            relative p-3 sm:p-3.5 rounded-2xl overflow-hidden shadow-sm
             ${isAI 
-              ? 'bg-[#0e0e1c]/80 border border-white/5 rounded-tl-sm backdrop-blur-md' 
+              ? 'bg-[#0e0e1c]/90 border border-white/5 rounded-tl-sm backdrop-blur-md' 
               : 'bg-violet-600 text-white rounded-tr-sm shadow-violet-900/10'
             }
           `}>
-             {/* AI Glass effect overlay */}
             {isAI && (
               <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
             )}
             
             <div className={isAI ? 'relative z-10' : ''}>
-              {isAI ? renderContent(message.text) : <p className="text-[14px] sm:text-[15px] leading-relaxed font-medium">{message.text}</p>}
+              {isAI ? (
+                <div className="text-[13px] sm:text-[14px] leading-relaxed text-neutral-200">
+                   {renderContent(message.text)}
+                </div>
+              ) : (
+                <p className="text-[13px] sm:text-[14px] leading-relaxed font-medium">{message.text}</p>
+              )}
             </div>
 
             {/* User attached files */}
             {!isAI && message.files?.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-white/10">
+              <div className="flex flex-wrap gap-2 mt-2 pt-2 border-t border-white/10">
                 {message.files.map((f, i) => (
-                  <div key={i} className="flex items-center gap-1.5 bg-white/10 border border-white/10 text-[11px] px-2.5 py-1.5 rounded-xl backdrop-blur-sm">
+                  <div key={i} className="flex items-center gap-1.5 bg-white/10 border border-white/10 text-[10px] px-2 py-1 rounded-lg backdrop-blur-sm">
                     <FileText size={10} className="text-violet-200" />
-                    <span className="truncate max-w-[120px] font-bold">{f.name}</span>
+                    <span className="truncate max-w-[100px] font-bold">{f.name}</span>
                   </div>
                 ))}
               </div>
@@ -151,29 +157,29 @@ const MessageBubble = ({ message }) => {
 
           {/* AI Sources & Metadata */}
           {isAI && (
-            <div className="flex flex-col gap-2.5 mt-2 ml-1 w-full">
+            <div className="flex flex-col gap-2 mt-2 w-full">
               {message.sources?.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-1">
                   {message.sources.map((src, i) => (
-                    <motion.span whileHover={{ scale: 1.02 }} key={i} className="flex items-center gap-1.5 text-[11px] text-violet-400 bg-violet-600/10 border border-violet-500/20 px-3 py-1.5 rounded-xl cursor-default transition-all hover:bg-violet-600/15">
-                      <FileText size={10} /> {src.filename} <span className="opacity-50">•</span> p.{src.page}
+                    <motion.span whileHover={{ scale: 1.02 }} key={i} className="flex items-center gap-1 text-[10px] text-violet-400 bg-violet-600/5 border border-violet-500/10 px-2.5 py-1 rounded-lg cursor-default transition-all hover:bg-violet-600/10">
+                      <FileText size={9} /> {src.filename} <span className="opacity-30">•</span> {src.page}
                     </motion.span>
                   ))}
                 </div>
               )}
 
               {/* Actions */}
-              <div className="flex items-center gap-1">
-                <button onClick={copyToClipboard} className="flex items-center gap-1.5 p-2 hover:bg-white/[0.05] rounded-xl text-[11px] font-bold text-neutral-600 hover:text-neutral-400 transition-all">
-                  {copied ? <Check size={11} className="text-emerald-400" /> : <Copy size={11} />}
+              <div className="flex items-center gap-0.5 opacity-60 hover:opacity-100 transition-opacity">
+                <button onClick={copyToClipboard} className="flex items-center gap-1 p-1.5 hover:bg-white/[0.03] rounded-lg text-[9px] font-bold text-neutral-600 hover:text-neutral-400 transition-all">
+                  {copied ? <Check size={10} className="text-emerald-400" /> : <Copy size={10} />}
                   {copied ? 'Copied' : 'Copy'}
                 </button>
-                <div className="w-px h-3 bg-white/5 mx-1" />
-                <button onClick={() => handleFeedback(true)} className={`p-2 hover:bg-white/[0.05] rounded-xl transition-all ${liked === true ? 'text-emerald-400' : 'text-neutral-600 hover:text-neutral-400'}`}>
-                  <ThumbsUp size={12} />
+                <div className="w-px h-2 bg-white/5 mx-1" />
+                <button onClick={() => handleFeedback(true)} className={`p-1.5 hover:bg-white/[0.03] rounded-lg transition-all ${liked === true ? 'text-emerald-400' : 'text-neutral-700 hover:text-neutral-400'}`}>
+                  <ThumbsUp size={11} />
                 </button>
-                <button onClick={() => handleFeedback(false)} className={`p-2 hover:bg-white/[0.05] rounded-xl transition-all ${liked === false ? 'text-red-400' : 'text-neutral-600 hover:text-neutral-400'}`}>
-                  <ThumbsDown size={12} />
+                <button onClick={() => handleFeedback(false)} className={`p-1.5 hover:bg-white/[0.03] rounded-lg transition-all ${liked === false ? 'text-red-400' : 'text-neutral-700 hover:text-neutral-400'}`}>
+                  <ThumbsDown size={11} />
                 </button>
               </div>
             </div>
@@ -222,6 +228,7 @@ const ChatPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, isAuthenticated } = useAuth();
   const {
     sessions,
     currentSessionId,
@@ -245,7 +252,9 @@ const ChatPage = () => {
   
   const messages = getChatMessages(id);
 
-  useEffect(() => { loadSessions(); }, [loadSessions]);
+  useEffect(() => { 
+    if (isAuthenticated) loadSessions(); 
+  }, [loadSessions, isAuthenticated]);
   useEffect(() => { if (id && id !== currentSessionId) setCurrentSessionId(id); }, [id, currentSessionId, setCurrentSessionId]);
   useEffect(() => { 
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); 
@@ -317,15 +326,35 @@ const ChatPage = () => {
     e.target.value = '';
   };
 
-  if (!id && sessions.length > 0) {
+  const isEmpty = messages.length === 0;
+
+  if (!id && isAuthenticated && sessions.length > 0) {
     navigate(`/chat/${sessions[0].sessionId}`);
     return null;
   }
 
-  const isEmpty = messages.length === 0;
-
   return (
     <div className="flex flex-col bg-[#07070f] relative overflow-hidden" style={{ height: 'calc(100vh - 56px)' }}>
+      
+      {/* Professional Guest Banner */}
+      {!isAuthenticated && (
+        <motion.div 
+          initial={{ y: -50 }}
+          animate={{ y: 0 }}
+          className="bg-violet-600/10 border-b border-violet-500/20 px-4 py-2.5 flex items-center justify-between backdrop-blur-md z-40"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
+            <p className="text-[11px] font-black text-violet-400 uppercase tracking-widest">
+              Demo Environment <span className="text-neutral-600 mx-1">•</span> History will not be saved
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link to="/login" className="text-[10px] font-black text-neutral-400 hover:text-white uppercase tracking-widest px-3 py-1.5 transition-colors">Sign In</Link>
+            <Link to="/signup" className="text-[10px] font-black bg-violet-600 text-white uppercase tracking-widest px-3 py-1.5 rounded-lg shadow-lg shadow-violet-600/20 hover:bg-violet-500 transition-all">Sign Up Free</Link>
+          </div>
+        </motion.div>
+      )}
       {/* Decorative backdrop gradients */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-violet-600/5 blur-[120px] rounded-full pointer-events-none -z-10 animate-pulse" />
       <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-indigo-600/5 blur-[100px] rounded-full pointer-events-none -z-10" />

@@ -90,6 +90,11 @@ export const deleteChatById = async (chatId) => {
   return response.data;
 };
 
+export const deleteChatSession = async (sessionId) => {
+  const response = await api.delete(`/v1/chat/session/${sessionId}`);
+  return response.data;
+};
+
 export const updateChatFeedback = async (chatId, feedback) => {
   const response = await api.patch(`/v1/chat/${chatId}/feedback`, feedback);
   return response.data;

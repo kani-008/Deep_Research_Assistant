@@ -42,12 +42,12 @@ const App = () => (
           } />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/chat" element={<Layout><ChatPage /></Layout>} />
+          <Route path="/chat/:id" element={<Layout><ChatPage /></Layout>} />
 
           {/* Protected — wrapped in Layout */}
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Layout><DashboardPage /></Layout>} />
-            <Route path="/chat" element={<Layout><ChatPage /></Layout>} />
-            <Route path="/chat/:id" element={<Layout><ChatPage /></Layout>} />
             <Route path="/tools" element={<Layout><ToolsPage /></Layout>} />
             <Route path="/analytics" element={<Layout><AnalyticsPage /></Layout>} />
           </Route>

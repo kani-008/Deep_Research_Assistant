@@ -2282,3 +2282,137 @@
 {"level":"info","message":"🏥 Health Check: http://localhost:5000/health","service":"deep-research-backend","timestamp":"2026-03-23 03:10:04"}
 {"email":"kanishkar.m06@gmail.com","level":"info","message":"User logged in successfully","service":"deep-research-backend","timestamp":"2026-03-23 03:11:29","userId":"69c00e1a61d027d71fa7a36d"}
 {"level":"info","message":"\u001b[0mPOST /api/v1/auth/login \u001b[32m200\u001b[0m 828.048 ms - 480\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:11:29"}
+{"level":"info","message":"Environment variables successfully validated","service":"deep-research-backend","timestamp":"2026-03-23 03:13:34"}
+{"level":"info","message":"🚀 Backend Server running on port 5000 in development mode","service":"deep-research-backend","timestamp":"2026-03-23 03:13:36"}
+{"level":"info","message":"📚 API Documentation: http://localhost:5000","service":"deep-research-backend","timestamp":"2026-03-23 03:13:36"}
+{"level":"info","message":"🏥 Health Check: http://localhost:5000/health","service":"deep-research-backend","timestamp":"2026-03-23 03:13:36"}
+{"level":"info","message":"Environment variables successfully validated","service":"deep-research-backend","timestamp":"2026-03-23 03:13:53"}
+{"level":"info","message":"🚀 Backend Server running on port 5000 in development mode","service":"deep-research-backend","timestamp":"2026-03-23 03:13:56"}
+{"level":"info","message":"📚 API Documentation: http://localhost:5000","service":"deep-research-backend","timestamp":"2026-03-23 03:13:56"}
+{"level":"info","message":"🏥 Health Check: http://localhost:5000/health","service":"deep-research-backend","timestamp":"2026-03-23 03:13:56"}
+{"email":"kanishkar.m06@gmail.com","level":"info","message":"User logged in successfully","service":"deep-research-backend","timestamp":"2026-03-23 03:14:31","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mPOST /api/v1/auth/login \u001b[32m200\u001b[0m 851.288 ms - 480\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:14:31"}
+{"count":41,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:14:49","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[32m200\u001b[0m 218.293 ms - 31138\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:14:49"}
+{"count":41,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:14:49","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 204.198 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:14:49"}
+{"count":41,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:14:49","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 142.585 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:14:49"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:14:49","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 667.028 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:14:49"}
+{"count":41,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:14:49","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 212.017 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:14:49"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:14:49","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 140.947 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:14:49"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:14:49","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 125.945 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:14:49"}
+{"level":"info","message":"Environment variables successfully validated","service":"deep-research-backend","timestamp":"2026-03-23 03:16:28"}
+{"level":"info","message":"🚀 Backend Server running on port 5000 in development mode","service":"deep-research-backend","timestamp":"2026-03-23 03:16:31"}
+{"level":"info","message":"📚 API Documentation: http://localhost:5000","service":"deep-research-backend","timestamp":"2026-03-23 03:16:31"}
+{"level":"info","message":"🏥 Health Check: http://localhost:5000/health","service":"deep-research-backend","timestamp":"2026-03-23 03:16:31"}
+{"level":"info","message":"Environment variables successfully validated","service":"deep-research-backend","timestamp":"2026-03-23 03:16:41"}
+{"level":"info","message":"🚀 Backend Server running on port 5000 in development mode","service":"deep-research-backend","timestamp":"2026-03-23 03:16:44"}
+{"level":"info","message":"📚 API Documentation: http://localhost:5000","service":"deep-research-backend","timestamp":"2026-03-23 03:16:44"}
+{"level":"info","message":"🏥 Health Check: http://localhost:5000/health","service":"deep-research-backend","timestamp":"2026-03-23 03:16:44"}
+{"count":41,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:16:45","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 1084.972 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:45"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:16:45","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 1256.164 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:45"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:16:45","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 123.100 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:45"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:16:46","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 134.756 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:46"}
+{"count":41,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:16:46","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 539.962 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:46"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:16:46","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 135.107 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:46"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:16:46","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 145.972 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:46"}
+{"count":41,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:16:46","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 205.665 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:46"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:16:46","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 100.680 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:46"}
+{"count":41,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:16:46","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 152.550 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:46"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:16:49","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 116.318 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:49"}
+{"count":41,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:16:49","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 182.749 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:49"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:16:49","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 132.606 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:49"}
+{"count":41,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:16:49","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 169.978 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:49"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:16:49","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 153.426 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:49"}
+{"count":41,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:16:49","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 174.674 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:49"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:16:49","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 120.395 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:49"}
+{"count":41,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:16:50","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 210.019 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:50"}
+{"count":41,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:16:50","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 209.441 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:50"}
+{"count":41,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:16:50","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 136.427 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:50"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:16:54","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 136.594 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:54"}
+{"count":41,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:16:54","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 186.242 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:54"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:16:54","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 118.123 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:54"}
+{"count":41,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:16:54","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 211.494 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:54"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:16:54","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 139.429 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:54"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:16:54","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 118.591 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:54"}
+{"count":41,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:16:54","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 228.332 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:54"}
+{"count":41,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:16:54","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 152.851 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:54"}
+{"count":41,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:16:54","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 137.751 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:54"}
+{"count":41,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:16:54","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 136.299 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:16:54"}
+{"deletedCount":1,"level":"info","message":"Chat session deleted from cloud","service":"deep-research-backend","sessionId":"208c50d1-d615-476b-b5a9-93cadd6dfb70","timestamp":"2026-03-23 03:17:24","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mDELETE /api/v1/chat/session/208c50d1-d615-476b-b5a9-93cadd6dfb70 \u001b[32m200\u001b[0m 140.418 ms - 101\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:17:24"}
+{"count":40,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:17:26","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[32m200\u001b[0m 184.174 ms - 30277\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:17:26"}
+{"count":40,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:17:26","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 212.374 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:17:26"}
+{"count":40,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:17:28","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 203.658 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:17:28"}
+{"count":40,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:17:28","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 174.347 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:17:28"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:17:29","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 140.310 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:17:29"}
+{"count":40,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:17:29","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 198.899 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:17:29"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:17:29","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 117.599 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:17:29"}
+{"count":40,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:17:30","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 133.114 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:17:30"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:17:30","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 142.324 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:17:30"}
+{"count":40,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:17:30","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 180.864 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:17:30"}
+{"count":1,"level":"info","message":"Upload history retrieved","service":"deep-research-backend","timestamp":"2026-03-23 03:17:30","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/uploads?page=1&limit=100 \u001b[36m304\u001b[0m 123.741 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:17:30"}
+{"count":40,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:17:30","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 163.135 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:17:30"}
+{"count":40,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:17:30","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 128.789 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:17:30"}
+{"count":40,"level":"info","limit":"200","message":"Chat history retrieved","page":"1","service":"deep-research-backend","timestamp":"2026-03-23 03:17:30","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"info","message":"\u001b[0mGET /api/v1/chat/history?page=1&limit=200 \u001b[36m304\u001b[0m 137.752 ms - -\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:17:30"}
+{"contextSize":4,"level":"info","message":"n8n chat request successful","processingTime":945,"service":"deep-research-backend","timestamp":"2026-03-23 03:17:38"}
+{"error":"Chat validation failed: answer: Answer is required","level":"error","message":"Chat processing error","service":"deep-research-backend","timestamp":"2026-03-23 03:17:38","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"error","message":"Error: Failed to process research query stack: Error: Failed to process research query\n    at Object.serverError (K:\\program\\Project\\Deep_Research_Assistant\\backend\\utils\\errorHandler.js:35:64)\n    at K:\\program\\Project\\Deep_Research_Assistant\\backend\\controllers\\chatController.js:90:30\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)","method":"POST","path":"/api/v1/chat","service":"deep-research-backend","statusCode":500,"timestamp":"2026-03-23 03:17:38"}
+{"level":"info","message":"\u001b[0mPOST /api/v1/chat \u001b[31m500\u001b[0m 1140.140 ms - 428\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:17:38"}
+{"contextSize":4,"level":"info","message":"n8n chat request successful","processingTime":421,"service":"deep-research-backend","timestamp":"2026-03-23 03:17:40"}
+{"error":"Chat validation failed: answer: Answer is required","level":"error","message":"Chat processing error","service":"deep-research-backend","timestamp":"2026-03-23 03:17:40","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"error","message":"Error: Failed to process research query stack: Error: Failed to process research query\n    at Object.serverError (K:\\program\\Project\\Deep_Research_Assistant\\backend\\utils\\errorHandler.js:35:64)\n    at K:\\program\\Project\\Deep_Research_Assistant\\backend\\controllers\\chatController.js:90:30\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)","method":"POST","path":"/api/v1/chat","service":"deep-research-backend","statusCode":500,"timestamp":"2026-03-23 03:17:40"}
+{"level":"info","message":"\u001b[0mPOST /api/v1/chat \u001b[31m500\u001b[0m 547.346 ms - 428\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:17:40"}
+{"contextSize":4,"level":"info","message":"n8n chat request successful","processingTime":384,"service":"deep-research-backend","timestamp":"2026-03-23 03:17:42"}
+{"error":"Chat validation failed: answer: Answer is required","level":"error","message":"Chat processing error","service":"deep-research-backend","timestamp":"2026-03-23 03:17:42","userId":"69c00e1a61d027d71fa7a36d"}
+{"level":"error","message":"Error: Failed to process research query stack: Error: Failed to process research query\n    at Object.serverError (K:\\program\\Project\\Deep_Research_Assistant\\backend\\utils\\errorHandler.js:35:64)\n    at K:\\program\\Project\\Deep_Research_Assistant\\backend\\controllers\\chatController.js:90:30\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)","method":"POST","path":"/api/v1/chat","service":"deep-research-backend","statusCode":500,"timestamp":"2026-03-23 03:17:42"}
+{"level":"info","message":"\u001b[0mPOST /api/v1/chat \u001b[31m500\u001b[0m 509.318 ms - 428\u001b[0m","service":"deep-research-backend","timestamp":"2026-03-23 03:17:42"}
