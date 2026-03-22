@@ -6,7 +6,7 @@ import {
 import {
   TrendingUp, TrendingDown, BarChart3, Clock, Zap, Layers,
   Download, Share2, CheckCircle, ChevronRight, FileText, Database,
-  Loader2
+  Loader2, RotateCcw
 } from 'lucide-react';
 import { fetchAnalyticsDataApi } from '../api/api';
 import toast from 'react-hot-toast';
@@ -27,17 +27,21 @@ const Tip = ({ active, payload, label }) => {
 };
 
 const StatCard = ({ title, value, change, icon: Icon, accent, bg, ring }) => (
-  <div className="bg-[#0d0d1a] border border-white/[0.06] rounded-2xl p-4 sm:p-5 flex items-center gap-4 hover:border-violet-500/20 transition-all group relative overflow-hidden">
+  <div className="bg-[#0d0d1a] border border-white/[0.06] rounded-2xl p-4 md:p-5 flex items-center gap-3 sm:gap-4 hover:border-violet-500/20 transition-all group relative overflow-hidden">
     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-    <div className={`w-11 h-11 rounded-xl ${bg} ring-1 ${ring} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300`}>
+    <div className={`w-10 h-10 md:w-11 md:h-11 rounded-xl ${bg} ring-1 ${ring} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300`}>
       <Icon size={18} className={accent} />
     </div>
     <div className="flex-1 min-w-0">
-      <p className="text-[10px] sm:text-[11px] font-black text-neutral-600 uppercase tracking-widest mb-1 truncate">{title}</p>
-      <p className="text-xl sm:text-2xl font-black text-white tracking-tight leading-none">{value}</p>
+      <p className="text-[9px] sm:text-[10px] md:text-[11px] font-black text-neutral-600 uppercase tracking-widest mb-1.5 whitespace-normal break-words leading-tight">
+        {title}
+      </p>
+      <p className="text-lg sm:text-xl md:text-2xl font-black text-white tracking-tight leading-none break-all">
+        {value}
+      </p>
     </div>
     {change !== undefined && (
-      <span className={`flex items-center gap-0.5 text-[10px] font-black px-2 py-1 rounded-lg flex-shrink-0 ${
+      <span className={`flex items-center gap-0.5 text-[9px] md:text-[10px] font-black px-1.5 md:px-2 py-1 rounded-lg flex-shrink-0 ${
         change >= 0 ? 'text-emerald-400 bg-emerald-500/10' : 'text-red-400 bg-red-500/10'
       }`}>
         {change >= 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
@@ -50,17 +54,23 @@ const StatCard = ({ title, value, change, icon: Icon, accent, bg, ring }) => (
 const AnalyticsPage = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [range, setRange] = useState('7d');
 
   useEffect(() => {
     const load = async () => {
       try {
         const res = await fetchAnalyticsDataApi();
-        if (res.success) {
+        if (res && res.success) {
           setData(res.data);
+          setError(false);
+        } else {
+          setError(true);
         }
       } catch (err) {
-        toast.error('Cloud DB sync failed');
+        console.error('Analytics Fetch Error:', err);
+        setError(true);
+        toast.error('Cloud DB sync failed — Check cluster health');
       } finally {
         setLoading(false);
       }
@@ -68,18 +78,31 @@ const AnalyticsPage = () => {
     load();
   }, []);
 
-  // ── Transform Backend Data for Charts ──────────────────────────────────────────
+  // ── Robust Defaults & Transformation ──────────────────────────────────────────
   
+  const stats = useMemo(() => ({
+    queries: data?.stats?.queries || 0,
+    docs: data?.stats?.docs || 0,
+    topics: data?.stats?.topics || 0,
+    response: data?.stats?.response || '0.0s'
+  }), [data]);
+
+  const fileTypes = useMemo(() => {
+    if (data?.fileTypes?.length > 0) return data.fileTypes;
+    return [{ name: 'System Idle', value: 100, color: 'rgba(255,255,255,0.03)' }];
+  }, [data]);
+
+  const recent = useMemo(() => data?.recent || [], [data]);
+
   const chartData = useMemo(() => {
-    if (!data?.activity) return [];
-    
-    // Fill in last 7 days even if no data exists in DB
+    // Always generate last 7 days for a consistent chart view
     const days = [...Array(7)].map((_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const iso = d.toISOString().split('T')[0];
-      const entry = data.activity.find(a => a._id === iso);
-      const upload = data.uploads?.find(u => u._id === iso);
+      
+      const entry = data?.activity?.find(a => a._id === iso);
+      const upload = data?.uploads?.find(u => u._id === iso);
       
       return {
         date: d.toLocaleDateString('en-US', { weekday: 'short' }),
@@ -96,12 +119,27 @@ const AnalyticsPage = () => {
     return (
       <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] gap-3">
         <Loader2 size={32} className="text-violet-500 animate-spin" />
-        <p className="text-xs font-black text-neutral-600 uppercase tracking-widest">Syncing with Cloud DB...</p>
+        <p className="text-xs font-black text-neutral-600 uppercase tracking-widest">Syncing with Research Cluster...</p>
       </div>
     );
   }
 
-  const { stats, fileTypes, recent } = data || { stats: {}, fileTypes: [], recent: [] };
+  if (error && !data) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-6">
+        <div className="w-16 h-16 rounded-[2rem] bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-2">
+            <Database size={28} className="text-red-500 opacity-60" />
+        </div>
+        <h2 className="text-xl font-black text-white">Cluster Synchronization Failed</h2>
+        <p className="max-w-xs text-xs text-neutral-600 font-bold uppercase tracking-widest leading-loose">
+           Could not establish a stable connection to the cloud analytics stream.
+        </p>
+        <button onClick={() => window.location.reload()} className="bg-violet-600 text-white text-[11px] font-black uppercase tracking-widest px-6 py-3 rounded-xl shadow-xl shadow-violet-600/20">
+           Retry Connection
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-5 py-8 sm:py-10 pb-20 space-y-8 sm:space-y-10">
@@ -270,10 +308,10 @@ const AnalyticsPage = () => {
                   <FileText size={14} className={row.type === 'upload' ? 'text-cyan-400' : 'text-violet-400'} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-white font-bold truncate uppercase tracking-tight">{row.action}</p>
-                  <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-widest mt-0.5">{new Date(row.time).toLocaleString()}</p>
+                  <p className="text-xs md:text-sm text-white font-bold leading-snug uppercase tracking-tight break-words py-0.5">{row.action}</p>
+                  <p className="text-[9px] md:text-[10px] text-neutral-600 font-bold uppercase tracking-widest mt-0.5">{new Date(row.time).toLocaleString()}</p>
                 </div>
-                <span className="text-[11px] text-neutral-700 font-black uppercase flex-shrink-0 whitespace-nowrap">Logged</span>
+                <span className="text-[10px] md:text-[11px] text-neutral-700 font-black uppercase flex-shrink-0 whitespace-nowrap hidden sm:inline-block">Logged</span>
               </div>
             ))
           )}

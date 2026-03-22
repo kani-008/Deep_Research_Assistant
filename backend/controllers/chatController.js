@@ -22,11 +22,13 @@ exports.sendMessage = asyncHandler(async (req, res, next) => {
 
   try {
     const startTime = Date.now();
-    const userIdStr = isGuest ? 'guest-demo-user' : req.user._id.toString();
+    
+    // Identity: For guests, the sessionId IS the primary unique identifier for isolation
+    const userIdStr = isGuest ? `guest-${sessionId || 'demo'}` : req.user._id.toString();
 
-    // Get previous chat context (only for authenticated users)
+    // Get previous chat context strictly isolated to THIS session
     const previousChats = (!isGuest && sessionId)
-      ? await Chat.getSessionContext(req.user._id, sessionId, 5)
+      ? await Chat.getSessionContext(req.user._id, sessionId, 8) // Limit to 8 for deep context
       : [];
 
     // Send to n8n with context and strict RAG instructions

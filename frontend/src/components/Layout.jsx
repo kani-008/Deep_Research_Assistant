@@ -6,15 +6,15 @@ import {
   Settings, LogOut, X, Search, Trash2, RefreshCw,
   Menu, ChevronRight, Sparkles, User, Bell, Keyboard,
   HelpCircle, ExternalLink, Moon, Shield, BookOpen,
-  ChevronUp, FileText, Zap, Volume2, Globe
+  ChevronUp, FileText, Zap, Volume2, Globe, Lock
 } from 'lucide-react';
 import { useChat } from '../context/ChatContext';
 import { useAuth } from '../context/AuthContext';
 
 // ── Settings Panel ─────────────────────────────────────────────────────────────
 const SettingsPanel = ({ onClose, user, logout, navigate, documents }) => {
+  const [view, setView] = useState('main'); // 'main' | 'profile'
   const [notifications, setNotifications] = useState(true);
-  const [soundEnabled, setSoundEnabled] = useState(false);
   const [compactMode, setCompactMode] = useState(false);
   const [language, setLanguage] = useState('English (US)');
 
@@ -50,8 +50,8 @@ const SettingsPanel = ({ onClose, user, logout, navigate, documents }) => {
           icon: User,
           label: 'Profile Settings',
           sub: user?.email || 'Manage your account',
-          action: () => {},
-          right: <ChevronRight size={12} className="text-neutral-700 hover:text-neutral-400" />,
+          action: () => setView('profile'),
+          right: <ChevronRight size={12} className="text-neutral-700 group-hover:text-violet-400" />,
         },
         {
           icon: Zap,
@@ -90,7 +90,7 @@ const SettingsPanel = ({ onClose, user, logout, navigate, documents }) => {
       items: [
         {
           icon: Globe,
-          label: 'Display Language',
+          label: 'Language',
           sub: language,
           action: () => {
             const langs = ['English (US)', 'Spanish', 'French', 'German'];
@@ -101,43 +101,86 @@ const SettingsPanel = ({ onClose, user, logout, navigate, documents }) => {
         },
         {
           icon: Bell,
-          label: 'Email Notifications',
+          label: 'Notifications',
           sub: 'Processing alerts',
           action: () => setNotifications(p => !p),
           right: <Toggle value={notifications} onChange={setNotifications} />,
         },
         {
           icon: Moon,
-          label: 'Dynamic Appearance',
+          label: 'Appearance',
           sub: compactMode ? 'Compact' : 'Standard',
           action: () => setCompactMode(p => !p),
           right: <Toggle value={compactMode} onChange={setCompactMode} />,
         },
       ],
     },
-    {
-      label: 'Integrations & Support',
-      items: [
-        {
-          icon: Shield,
-          label: 'API Keys',
-          sub: 'Manage access tokens',
-          action: () => {},
-          right: <ExternalLink size={12} className="text-neutral-700" />,
-        },
-        {
-          icon: HelpCircle,
-          label: 'Support Center',
-          sub: 'Talk to human',
-          action: () => {},
-          right: <ExternalLink size={12} className="text-neutral-700" />,
-        },
-      ],
-    },
   ];
 
+  const ProfileView = () => (
+    <div className="flex flex-col animate-in slide-in-from-right-4 duration-300">
+      <div className="p-5 border-b border-white/[0.06] bg-white/[0.01]">
+        <div className="flex items-center gap-4">
+          <div className="relative group">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-700 p-[1px] shadow-xl shadow-violet-500/20">
+              <div className="w-full h-full rounded-2xl bg-[#0f0f1e] flex items-center justify-center overflow-hidden">
+                <span className="text-2xl font-black text-violet-400 uppercase tracking-tighter">
+                  {user?.name?.substring(0, 2) || user?.email?.substring(0, 2) || 'AD'}
+                </span>
+              </div>
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-lg bg-emerald-500 border-2 border-[#0f0f1e] flex items-center justify-center shadow-lg">
+                <Shield size={10} className="text-white" />
+            </div>
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-sm font-black text-white tracking-tight truncate">{user?.name || 'Deep Researcher'}</h3>
+            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-[0.15em] mt-1">Verified Account</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4 space-y-4 max-h-80 overflow-y-auto custom-scrollbar">
+        <div className="space-y-1">
+            <label className="text-[10px] font-black text-neutral-700 uppercase tracking-widest px-1">Email Address</label>
+            <div className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-2.5 text-xs text-neutral-300 font-medium">
+                {user?.email || 'not-available@email.com'}
+            </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+                <label className="text-[10px] font-black text-neutral-700 uppercase tracking-widest px-1">Account ID</label>
+                <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl px-3 py-2.5 text-[10px] text-neutral-500 font-mono truncate">
+                    {user?._id?.substring(0, 12) || 'RID-08221'}
+                </div>
+            </div>
+            <div className="space-y-1">
+                <label className="text-[10px] font-black text-neutral-700 uppercase tracking-widest px-1">Security</label>
+                <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl px-3 py-2.5 text-[10px] text-emerald-400 font-black uppercase flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Protected
+                </div>
+            </div>
+        </div>
+
+        <div className="pt-2">
+            <button className="w-full py-3 px-4 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] rounded-xl text-[11px] font-black text-white uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                <Lock size={12} className="text-neutral-500" />
+                Change Password
+            </button>
+        </div>
+      </div>
+
+      <div className="mt-auto p-4 border-t border-white/[0.06] bg-white/[0.01]">
+        <button onClick={() => setView('main')} className="w-full py-3 text-[10px] font-black text-neutral-500 uppercase tracking-[0.2em] hover:text-white transition-colors">
+            Return to Dashboard
+        </button>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="absolute bottom-full left-0 right-0 mb-3 z-[60] mx-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
+    <div className="absolute bottom-full left-0 right-0 mb-3 z-[60] mx-2 animate-in rotate-in fade-in slide-in-from-bottom-2 duration-200">
       {/* Panel */}
       <div className="bg-[#0f0f1e] border border-white/[0.1] rounded-2xl shadow-2xl shadow-black/80 overflow-hidden flex flex-col">
         {/* Header */}
@@ -154,42 +197,42 @@ const SettingsPanel = ({ onClose, user, logout, navigate, documents }) => {
           </button>
         </div>
 
-        {/* Sections Scrollable Area */}
-        <div className="overflow-y-auto max-h-[60vh] sm:max-h-96 py-3 space-y-1 custom-scrollbar">
-          {sections.map(({ label, items, custom }, idx) => (
-            <div key={idx} className="mb-2">
-              <p className="text-[0.6rem] font-black text-neutral-700 uppercase tracking-[0.2em] px-4 pt-2 pb-1.5">{label}</p>
-              {custom}
-              {items?.map(({ icon: Icon, label: itemLabel, sub, action, right }) => (
-                <button key={itemLabel} onClick={action}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.04] transition-colors text-left group">
-                  <div className="w-8 h-8 rounded-xl bg-white/[0.03] border border-white/[0.05] flex items-center justify-center flex-shrink-0 group-hover:border-white/[0.15] group-hover:bg-white/[0.06] transition-all">
-                    <Icon size={14} className="text-neutral-500 group-hover:text-neutral-300" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-neutral-200 truncate group-hover:text-white transition-colors">{itemLabel}</p>
-                    <p className="text-[0.65rem] text-neutral-600 truncate group-hover:text-neutral-500 transition-colors font-medium mt-0.5">{sub}</p>
-                  </div>
-                  <div className="flex-shrink-0">{right}</div>
-                </button>
+        {/* Main Content Area */}
+        <div className="overflow-y-auto max-h-[60vh] sm:max-h-[450px] custom-scrollbar">
+          {view === 'main' ? (
+            <div className="py-3 space-y-1">
+              {sections.map(({ label, items, custom }, idx) => (
+                <div key={idx} className="mb-2">
+                  <p className="text-[0.6rem] font-black text-neutral-700 uppercase tracking-[0.2em] px-4 pt-2 pb-1.5">{label}</p>
+                  {custom}
+                  {items?.map(({ icon: Icon, label: itemLabel, sub, action, right }) => (
+                    <button key={itemLabel} onClick={action}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.04] transition-colors text-left group">
+                      <div className="w-8 h-8 rounded-xl bg-white/[0.03] border border-white/[0.05] flex items-center justify-center flex-shrink-0 group-hover:border-white/[0.15] group-hover:bg-violet-600/10 transition-all">
+                        <Icon size={14} className="text-neutral-500 group-hover:text-violet-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-neutral-200 truncate group-hover:text-white transition-colors">{itemLabel}</p>
+                        <p className="text-[0.65rem] text-neutral-600 truncate group-hover:text-neutral-500 transition-colors font-medium mt-0.5">{sub}</p>
+                      </div>
+                      <div className="flex-shrink-0">{right}</div>
+                    </button>
+                  ))}
+                </div>
               ))}
+              
+              {/* Sign out embedded in scroll area for mobile ease */}
+              <div className="px-4 py-2 border-t border-white/[0.04] mt-2">
+                <button onClick={handleLogout}
+                  className="w-full flex items-center gap-3 py-2 px-1 text-red-500/70 hover:text-red-400 transition-colors group">
+                   <LogOut size={14} className="group-hover:-translate-x-1 transition-transform" />
+                   <span className="text-xs font-bold uppercase tracking-widest">Sign out account</span>
+                </button>
+              </div>
             </div>
-          ))}
-        </div>
-
-        {/* Footer — Profile Summary & Sign out */}
-        <div className="border-t border-white/[0.06] bg-white/[0.02] p-2 space-y-1">
-          <button onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-red-500/[0.08] group transition-all">
-            <div className="w-8 h-8 rounded-xl bg-red-500/[0.1] border border-red-500/10 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-              <LogOut size={14} className="text-red-500/70 group-hover:text-red-400" />
-            </div>
-            <div className="flex-1 text-left">
-              <p className="text-xs font-bold text-red-500/70 group-hover:text-red-400">Sign out</p>
-              <p className="text-[0.65rem] text-neutral-700 font-medium">Clear session data</p>
-            </div>
-            <ChevronRight size={14} className="text-neutral-800 group-hover:text-red-500/40" />
-          </button>
+          ) : (
+            <ProfileView />
+          )}
         </div>
       </div>
 
@@ -459,11 +502,6 @@ const Header = ({ onToggle }) => {
       </div>
 
       <div className="flex items-center gap-2 flex-shrink-0">
-        <div className="relative hidden md:block">
-          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-600 pointer-events-none" />
-          <input type="text" placeholder="Search…"
-            className="bg-white/[0.04] border border-white/[0.07] rounded-xl pl-8 pr-4 py-1.5 text-xs text-neutral-400 placeholder:text-neutral-700 outline-none focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/10 transition-all w-44 lg:w-60" />
-        </div>
         <button onClick={handleAskAI}
           className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md shadow-violet-600/20 active:scale-[0.98]">
           <Sparkles size={13} />
