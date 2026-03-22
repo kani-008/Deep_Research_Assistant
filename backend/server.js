@@ -168,7 +168,7 @@ app.use('/api/v1/uploads', uploadRoutes);
 // Backward compatibility - route old endpoints to v1
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
-app.use('/api/upload', uploadRoutes);
+app.use('/api/uploads', uploadRoutes); // fixed: was /api/upload (missing 's')
 
 // ============================================================
 // ERROR HANDLING

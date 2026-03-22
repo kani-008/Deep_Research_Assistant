@@ -178,7 +178,7 @@ const DashboardPage = () => {
             <div className="flex items-center gap-2">
               <span className="text-xs text-neutral-500 font-medium">{totalDocs} total</span>
               <button
-                onClick={async () => { setIsLoading(true); await loadDocuments(); setIsLoading(false); }}
+                onClick={async () => { setIsLoading(true); await loadDocuments(true); setIsLoading(false); }}
                 className="p-1.5 hover:bg-white/10 rounded-lg text-neutral-500 hover:text-white transition-colors"
                 title="Refresh from database"
               >

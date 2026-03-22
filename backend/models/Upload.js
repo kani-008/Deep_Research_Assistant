@@ -1,4 +1,7 @@
+// ./backend/models/Upload.js
+
 const mongoose = require('mongoose');
+const { randomUUID } = require('crypto');
 
 const uploadSchema = new mongoose.Schema(
   {
@@ -11,7 +14,11 @@ const uploadSchema = new mongoose.Schema(
     filename: {
       type: String,
       required: [true, 'Filename is required'],
-      unique: true
+      unique: true,
+      // Generated as uuid-originalName so it is always unique
+      default: function () {
+        return `${randomUUID()}-${this.originalName || 'file'}`;
+      }
     },
     originalName: {
       type: String,
@@ -31,10 +38,10 @@ const uploadSchema = new mongoose.Schema(
       default: 'pending'
     },
     ingestionMetadata: {
-        processingTimeMs: Number,
-        n8nWorkflowId: String,
-        driveFileId: String,       // Google Drive file ID for deletion
-        driveFileName: String      // Original name in Drive
+      processingTimeMs: Number,
+      n8nWorkflowId: String,
+      driveFileId: String,
+      driveFileName: String
     },
     errorDetails: {
       message: String,
@@ -43,7 +50,7 @@ const uploadSchema = new mongoose.Schema(
     },
     accessLogs: [
       {
-        action: String, // 'uploaded', 'viewed', 'deleted'
+        action: String,
         timestamp: {
           type: Date,
           default: Date.now
@@ -57,17 +64,11 @@ const uploadSchema = new mongoose.Schema(
 // Compound index for efficient querying
 uploadSchema.index({ userId: 1, createdAt: -1 });
 
-/**
- * Log access attempts or modifications
- */
 uploadSchema.methods.logAccess = async function (action) {
   this.accessLogs.push({ action });
   return this.save();
 };
 
-/**
- * Static method to get upload history with pagination
- */
 uploadSchema.statics.getUploadHistory = async function (userId, page = 1, limit = 20) {
   const skip = (page - 1) * limit;
 

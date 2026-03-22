@@ -15,31 +15,22 @@ import toast from 'react-hot-toast';
 const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {
-  // ─── In-memory session list (sourced from MongoDB via fetchChatHistory) ───
-  // Each session: { sessionId, title, messages: [], createdAt }
-  const [sessions, setSessions]               = useState([]);
+  const [sessions, setSessions]                 = useState([]);
   const [currentSessionId, setCurrentSessionId] = useState(null);
-
-  // ─── In-memory document list (sourced from MongoDB via fetchUploadHistory) ─
-  const [documents, setDocuments]             = useState([]);
-  const [docsLoaded, setDocsLoaded]           = useState(false);
-  const [sessionsLoaded, setSessionsLoaded]   = useState(false);
+  const [documents, setDocuments]               = useState([]);
+  const [docsLoaded, setDocsLoaded]             = useState(false);
+  const [sessionsLoaded, setSessionsLoaded]     = useState(false);
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // SESSIONS — load from MongoDB
+  // SESSIONS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  /**
-   * Load all chat sessions for the current user from MongoDB Atlas.
-   * Groups individual chat Q&A pairs by sessionId into session objects.
-   */
   const loadSessions = useCallback(async () => {
     if (sessionsLoaded) return;
     try {
-      const result = await fetchChatHistory(1, 200); // load up to 200 recent messages
+      const result = await fetchChatHistory(1, 200);
       const chats  = result.data || [];
 
-      // Group by sessionId
       const sessionMap = new Map();
       chats.forEach((chat) => {
         const sid = chat.sessionId;
@@ -52,25 +43,13 @@ export const ChatProvider = ({ children }) => {
           });
         }
         const session = sessionMap.get(sid);
-        // Reconstruct messages from Q&A pairs
-        session.messages.push({
-          id: chat._id + '_q',
-          sender: 'user',
-          text: chat.question,
-          timestamp: chat.createdAt,
-        });
-        session.messages.push({
-          id: chat._id + '_a',
-          sender: 'ai',
-          text: chat.answer,
-          timestamp: chat.createdAt,
-        });
+        session.messages.push({ id: chat._id + '_q', sender: 'user', text: chat.question, timestamp: chat.createdAt });
+        session.messages.push({ id: chat._id + '_a', sender: 'ai',   text: chat.answer,   timestamp: chat.createdAt });
       });
 
       const sorted = Array.from(sessionMap.values()).sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       );
-
       setSessions(sorted);
       setSessionsLoaded(true);
     } catch (err) {
@@ -78,19 +57,12 @@ export const ChatProvider = ({ children }) => {
     }
   }, [sessionsLoaded]);
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // CHAT OPERATIONS
-  // ═══════════════════════════════════════════════════════════════════════════
-
   const createNewChat = useCallback(() => {
     const newSessionId = uuidv4();
-    const newSession = {
-      sessionId: newSessionId,
-      title: 'New Chat',
-      messages: [],
-      createdAt: new Date().toISOString(),
-    };
-    setSessions((prev) => [newSession, ...prev]);
+    setSessions((prev) => [
+      { sessionId: newSessionId, title: 'New Chat', messages: [], createdAt: new Date().toISOString() },
+      ...prev,
+    ]);
     setCurrentSessionId(newSessionId);
     return newSessionId;
   }, []);
@@ -103,25 +75,15 @@ export const ChatProvider = ({ children }) => {
     [sessions]
   );
 
-  /**
-   * Add a message to an in-memory session.
-   * The actual persistence happens in chatController.js when sendMessage is called.
-   */
   const addMessage = useCallback((sessionId, message) => {
     setSessions((prev) =>
       prev.map((session) => {
         if (session.sessionId !== sessionId) return session;
-
         const newTitle =
           session.messages.length === 0 && message.sender === 'user'
             ? message.text.substring(0, 40) + (message.text.length > 40 ? '...' : '')
             : session.title;
-
-        return {
-          ...session,
-          title: newTitle,
-          messages: [...session.messages, message],
-        };
+        return { ...session, title: newTitle, messages: [...session.messages, message] };
       })
     );
   }, []);
@@ -131,18 +93,17 @@ export const ChatProvider = ({ children }) => {
     if (currentSessionId === sessionId) setCurrentSessionId(null);
   }, [currentSessionId]);
 
+  const refreshSessions = useCallback(() => setSessionsLoaded(false), []);
+
   // ═══════════════════════════════════════════════════════════════════════════
-  // DOCUMENTS — load from MongoDB
+  // DOCUMENTS
   // ═══════════════════════════════════════════════════════════════════════════
 
-  /**
-   * Load all uploaded documents for the current user from MongoDB Atlas.
-   */
-  const loadDocuments = useCallback(async () => {
-    if (docsLoaded) return;
+  const loadDocuments = useCallback(async (force = false) => {
+    if (docsLoaded && !force) return;
     try {
       const result = await fetchUploadHistory(1, 100);
-      const docs   = (result.data || []).map((d) => ({
+      const docs = (result.data || []).map((d) => ({
         id:         d._id,
         uploadId:   d._id,
         name:       d.originalName,
@@ -158,81 +119,96 @@ export const ChatProvider = ({ children }) => {
   }, [docsLoaded]);
 
   /**
-   * Upload a PDF — sends to backend which ingests into n8n → Drive → Qdrant → MongoDB.
-   * On success, adds the returned document record to in-memory state.
+   * Upload a PDF.
+   *
+   * api.js uploadFile() returns the full axios response object.
+   * Backend response shape:
+   *   { success: true, message: "...", data: { uploadId, filename, status, driveFileId } }
+   *
+   * So we read:
+   *   axiosResponse.data          → { success, message, data: {...} }
+   *   axiosResponse.data.success  → true/false
+   *   axiosResponse.data.data.uploadId → the real MongoDB _id
    */
   const uploadDocument = useCallback(async (file) => {
     const tempId = uuidv4();
 
-    // Optimistic UI — show uploading state immediately
-    const tempDoc = {
-      id:         tempId,
-      uploadId:   null,
-      name:       file.name,
-      size:       formatFileSize(file.size),
-      status:     'Uploading...',
-      uploadedAt: new Date().toISOString(),
-    };
-    setDocuments((prev) => [tempDoc, ...prev]);
+    // Optimistic UI
+    setDocuments((prev) => [
+      { id: tempId, uploadId: null, name: file.name, size: formatFileSize(file.size), status: 'Uploading...', uploadedAt: new Date().toISOString() },
+      ...prev,
+    ]);
 
     try {
-      const response = await uploadFileApi(file);
-      const data     = response.data; // { uploadId, filename, status, driveFileId }
+      const axiosResponse = await uploadFileApi(file);
+      // axiosResponse.data is the backend JSON body
+      const body = axiosResponse.data; // { success, message, data: { uploadId, filename, ... } }
 
-      setDocuments((prev) =>
-        prev.map((doc) =>
-          doc.id === tempId
-            ? {
-                ...doc,
-                id:       data.uploadId,
-                uploadId: data.uploadId,
-                name:     data.filename || file.name,
-                status:   'Processed ✅',
-              }
-            : doc
-        )
-      );
+      if (body.success && body.data?.uploadId) {
+        // ✅ Upload + ingestion succeeded
+        setDocuments((prev) =>
+          prev.map((doc) =>
+            doc.id === tempId
+              ? {
+                  ...doc,
+                  id:       body.data.uploadId,  // real MongoDB _id
+                  uploadId: body.data.uploadId,
+                  name:     body.data.filename || file.name,
+                  status:   'Processed ✅',
+                }
+              : doc
+          )
+        );
+      } else {
+        // ❌ Backend returned success:false (n8n 422 failure)
+        setDocuments((prev) =>
+          prev.map((doc) =>
+            doc.id === tempId
+              ? {
+                  ...doc,
+                  id:       body.data?.uploadId || tempId,
+                  uploadId: body.data?.uploadId || null,
+                  status:   'Failed ❌',
+                }
+              : doc
+          )
+        );
+        throw new Error(body.message || 'RAG ingestion failed. Please try again.');
+      }
     } catch (error) {
+      // Network/HTTP error — mark as failed
       setDocuments((prev) =>
-        prev.map((doc) =>
-          doc.id === tempId ? { ...doc, status: 'Failed ❌' } : doc
-        )
+        prev.map((doc) => doc.id === tempId ? { ...doc, status: 'Failed ❌' } : doc)
       );
-      throw error; // let caller handle toast
+      throw error; // let DashboardPage show the toast
     }
   }, []);
 
   /**
-   * Delete a document — removes from Drive, Qdrant, and MongoDB.
+   * Delete a document from Drive + Qdrant + MongoDB.
+   * Always uses doc.uploadId (real MongoDB _id), never the temp frontend UUID.
    */
   const deleteDocument = useCallback(async (docId) => {
-    // Optimistic removal
-    setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
+    let realUploadId = docId;
+
+    // Capture real MongoDB _id BEFORE removing from state
+    setDocuments((prev) => {
+      const doc = prev.find((d) => d.id === docId);
+      if (doc?.uploadId) realUploadId = doc.uploadId;
+      return prev.filter((d) => d.id !== docId); // optimistic removal
+    });
 
     try {
-      await deleteDocumentApi(docId);
+      await deleteDocumentApi(realUploadId);
       toast.success('Document deleted successfully');
     } catch (error) {
       console.error('Delete failed:', error.message);
-      toast.error('Failed to delete document: ' + error.message);
-      // Reload to restore accurate state
-      setDocsLoaded(false);
+      toast.error('Failed to delete: ' + error.message);
+      setDocsLoaded(false); // re-fetch to restore accurate state
     }
   }, []);
 
-  /**
-   * Force-refresh documents from MongoDB (e.g. after an error)
-   */
-  const refreshDocuments = useCallback(() => {
-    setDocsLoaded(false);
-  }, []);
-
-  /**
-   * Force-refresh sessions from MongoDB
-   */
-  const refreshSessions = useCallback(() => {
-    setSessionsLoaded(false);
-  }, []);
+  const refreshDocuments = useCallback(() => setDocsLoaded(false), []);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // HELPERS
@@ -240,15 +216,14 @@ export const ChatProvider = ({ children }) => {
 
   const formatFileSize = (bytes) => {
     if (!bytes) return '—';
-    if (bytes < 1024)       return bytes + ' B';
-    if (bytes < 1048576)    return (bytes / 1024).toFixed(1) + ' KB';
+    if (bytes < 1024)    return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / 1048576).toFixed(2) + ' MB';
   };
 
   return (
     <ChatContext.Provider
       value={{
-        // Sessions
         sessions,
         currentSessionId,
         setCurrentSessionId,
@@ -258,8 +233,6 @@ export const ChatProvider = ({ children }) => {
         deleteSession,
         loadSessions,
         refreshSessions,
-
-        // Documents
         documents,
         uploadDocument,
         deleteDocument,
