@@ -1,4 +1,7 @@
 // ./backend/controllers/uploadController.js
+// FIXED: driveFileId is now stored correctly from n8n ingestion response
+// FIXED: deleteUpload sends driveFileId + filename to n8n delete webhook (Drive + Qdrant)
+// NOTE: Your n8n Delete Workflow must: Webhook → Delete from Qdrant → Delete from Drive → Respond
 
 const { sendFileToN8n, deleteFileFromN8n } = require('../services/n8nService');
 const Upload = require('../models/Upload');
@@ -43,7 +46,6 @@ exports.uploadFile = asyncHandler(async (req, res, next) => {
     const processingTime = Date.now() - startTime;
 
     if (n8nResponse.success) {
-      // driveFileId is now extracted in n8nService from the Ingestion Workflow response
       const driveFileId = n8nResponse.driveFileId;
       const driveFileName = n8nResponse.driveFileName || req.file.originalname;
 
@@ -64,7 +66,7 @@ exports.uploadFile = asyncHandler(async (req, res, next) => {
         success: true,
         message: 'File uploaded and ingested successfully.',
         data: {
-          uploadId: upload._id,
+          uploadId: upload._id,          // ← frontend uses this as the delete key
           filename: upload.originalName,
           status: upload.status,
           driveFileId: driveFileId,
@@ -104,7 +106,7 @@ exports.uploadFile = asyncHandler(async (req, res, next) => {
  * GET /api/v1/uploads
  */
 exports.getUploadHistory = asyncHandler(async (req, res, next) => {
-  const { page = 1, limit = 20 } = req.query;
+  const { page = 1, limit = 50 } = req.query;
   try {
     const history = await Upload.getUploadHistory(req.user._id, parseInt(page), parseInt(limit));
     logger.info('Upload history retrieved', { userId: req.user._id, count: history.data.length });
@@ -132,8 +134,11 @@ exports.getUploadById = asyncHandler(async (req, res, next) => {
 });
 
 /**
- * Delete upload — removes from Google Drive, Qdrant, and MongoDB
+ * Delete upload — triggers n8n workflow: Drive deletion + Qdrant vector deletion + MongoDB cleanup
  * DELETE /api/v1/uploads/:uploadId
+ *
+ * n8n Delete Workflow should be:
+ *   Webhook (POST) → Delete Qdrant Points (by filename/metadata) → Delete Drive File → Respond to Webhook
  */
 exports.deleteUpload = asyncHandler(async (req, res, next) => {
   const { uploadId } = req.params;
@@ -142,46 +147,51 @@ exports.deleteUpload = asyncHandler(async (req, res, next) => {
   if (!upload) return next(createErrors.notFound('Upload not found'));
 
   const driveFileId = upload.ingestionMetadata?.driveFileId;
+  const originalName = upload.originalName;
 
   logger.info('Delete request received', {
     uploadId,
-    filename: upload.originalName,
-    driveFileId: driveFileId || 'NOT STORED'
+    filename: originalName,
+    driveFileId: driveFileId || 'NOT STORED — only DB will be cleaned'
   });
 
   let driveDeleted = false;
+  let n8nError = null;
 
   if (driveFileId) {
-    // Call n8n delete webhook → deletes from Google Drive + Qdrant
-    const n8nResult = await deleteFileFromN8n(driveFileId, upload.originalName, req.user._id);
+    // Sends { driveFileId, originalName, userId } to n8n delete webhook
+    // n8n must: delete Qdrant vectors (filter by filename/source) + delete Drive file
+    const n8nResult = await deleteFileFromN8n(driveFileId, originalName, req.user._id);
     if (n8nResult.success) {
       driveDeleted = true;
       logger.info('File deleted from Google Drive + Qdrant via n8n', { driveFileId });
     } else {
-      logger.warn('n8n Drive deletion failed — removing from DB anyway', {
+      n8nError = n8nResult.error;
+      logger.warn('n8n Drive/Qdrant deletion failed — removing from DB anyway', {
         uploadId,
         driveFileId,
-        error: n8nResult.error
+        error: n8nError
       });
     }
   } else {
-    logger.warn('No driveFileId stored — skipping Drive deletion', {
+    logger.warn('No driveFileId stored — skipping Drive/Qdrant deletion', {
       uploadId,
-      filename: upload.originalName,
-      hint: 'Re-upload this file to enable Drive sync deletion'
+      filename: originalName,
+      hint: 'Re-upload this file to enable Drive sync deletion. Check Ingestion Workflow Respond node.'
     });
   }
 
   // Always delete from MongoDB
   await Upload.findByIdAndDelete(uploadId);
-
   logger.info('Upload deleted from MongoDB', { uploadId, userId: req.user._id });
 
   res.status(200).json({
     success: true,
     driveDeleted,
     message: driveDeleted
-      ? 'File deleted from Google Drive, Qdrant, and database.'
-      : 'File removed from database. No Drive sync (re-upload to enable).'
+      ? 'File deleted from Google Drive, Qdrant vector store, and database.'
+      : driveFileId
+      ? `File removed from database. Drive/Qdrant deletion failed: ${n8nError}`
+      : 'File removed from database only (no Drive sync — re-upload to enable).'
   });
-}); 
+});

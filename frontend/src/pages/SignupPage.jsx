@@ -9,17 +9,15 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 
 const SignupPage = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [name,     setName]     = useState('');
+  const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    }
+    if (isAuthenticated) navigate('/dashboard');
   }, [isAuthenticated, navigate]);
 
   const handleSignup = async (e) => {
@@ -28,19 +26,19 @@ const SignupPage = () => {
       toast.error('Please fill in all fields.');
       return;
     }
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters.');
+    // Match backend: minimum 8 characters
+    if (password.length < 8) {
+      toast.error('Password must be at least 8 characters.');
       return;
     }
-    
+
     setIsLoading(true);
     try {
-      const response = await signupUser(name, email, password);
-      // Route to login after successful signup
-      toast.success('Account created successfully! Please log in.');
+      // api.js sends { name, email, password, passwordConfirm: password }
+      await signupUser(name, email, password);
+      toast.success('Account created! Please sign in.');
       navigate('/login');
     } catch (err) {
-      console.error('Signup error:', err);
       toast.error(err.message || 'Error creating account. Please try again.');
     } finally {
       setIsLoading(false);
@@ -51,8 +49,8 @@ const SignupPage = () => {
     <div className="min-h-screen bg-background flex flex-col justify-center items-center p-6 relative overflow-hidden">
       {/* Background blobs */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 opacity-20 pointer-events-none">
-        <div className="absolute top-[10%] left-[10%] w-[40%] h-[40%] bg-purple-500/30 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute bottom-[10%] right-[10%] w-[40%] h-[40%] bg-primary/30 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '3s' }}></div>
+        <div className="absolute top-[10%] left-[10%] w-[40%] h-[40%] bg-purple-500/30 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute bottom-[10%] right-[10%] w-[40%] h-[40%] bg-primary/30 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '3s' }} />
       </div>
 
       <Link to="/" className="absolute top-8 left-8 flex items-center gap-2 group text-white">
@@ -60,11 +58,7 @@ const SignupPage = () => {
         <span className="font-bold text-xl tracking-tight hidden sm:block">Deep Research</span>
       </Link>
 
-      <motion.div 
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
-      >
+      <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
         <div className="glass rounded-[2rem] p-8 md:p-10 shadow-2xl relative">
           <div className="absolute -top-6 -left-6 bg-gradient-to-tr from-accent to-purple-600 p-4 rounded-2xl shadow-xl -rotate-12 flex items-center justify-center">
             <Sparkles className="text-white" size={24} />
@@ -76,12 +70,13 @@ const SignupPage = () => {
           </div>
 
           <form onSubmit={handleSignup} className="space-y-5">
+            {/* Full name */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-neutral-300 uppercase tracking-wider">Full Name</label>
               <div className="relative group">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 group-focus-within:text-primary transition-colors" size={20} />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="John Doe"
@@ -90,12 +85,13 @@ const SignupPage = () => {
               </div>
             </div>
 
+            {/* Email */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-neutral-300 uppercase tracking-wider">Email Address</label>
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 group-focus-within:text-primary transition-colors" size={20} />
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@company.com"
@@ -104,27 +100,29 @@ const SignupPage = () => {
               </div>
             </div>
 
+            {/* Password */}
             <div className="space-y-2">
-               <label className="text-sm font-bold text-neutral-300 uppercase tracking-wider">Password</label>
+              <label className="text-sm font-bold text-neutral-300 uppercase tracking-wider">Password</label>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 group-focus-within:text-primary transition-colors" size={20} />
-                <input 
-                  type="password" 
+                <input
+                  type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Min. 8 characters"
                   className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-neutral-600"
                 />
               </div>
+              <p className="text-xs text-neutral-600 pl-1">Minimum 8 characters required</p>
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isLoading}
               className="w-full flex items-center justify-center gap-3 py-4 bg-primary hover:bg-primary-dark disabled:opacity-50 text-white rounded-xl transition-all font-black text-lg shadow-xl shadow-primary/20 mt-8 group"
             >
               {isLoading ? (
-                <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
                   <span>Create Account</span>
@@ -135,7 +133,10 @@ const SignupPage = () => {
           </form>
 
           <p className="mt-8 text-center text-sm text-neutral-400 font-medium">
-            Already have an account? <Link to="/login" className="text-white hover:text-primary font-bold transition-colors">Sign in here</Link>
+            Already have an account?{' '}
+            <Link to="/login" className="text-white hover:text-primary font-bold transition-colors">
+              Sign in here
+            </Link>
           </p>
         </div>
       </motion.div>

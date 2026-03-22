@@ -1,173 +1,254 @@
 // ./frontend/src/context/ChatContext.jsx
+// All chat sessions and documents are stored in MongoDB Atlas.
+// This context is a thin client-side cache — no localStorage for app data.
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { uploadFile, deleteDocument as deleteDocumentApi } from '../api/api';
+import {
+  uploadFile as uploadFileApi,
+  deleteDocument as deleteDocumentApi,
+  fetchUploadHistory,
+  fetchChatHistory,
+} from '../api/api';
 import toast from 'react-hot-toast';
 
 const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {
-  const [sessions, setSessions] = useState(() => {
-    const saved = localStorage.getItem('chat_sessions');
-    return saved ? JSON.parse(saved) : [];
-  });
+  // ─── In-memory session list (sourced from MongoDB via fetchChatHistory) ───
+  // Each session: { sessionId, title, messages: [], createdAt }
+  const [sessions, setSessions]               = useState([]);
+  const [currentSessionId, setCurrentSessionId] = useState(null);
 
-  const [currentSessionId, setCurrentSessionId] = useState(() => {
-    const lastSession = localStorage.getItem('last_session_id');
-    return lastSession || null;
-  });
+  // ─── In-memory document list (sourced from MongoDB via fetchUploadHistory) ─
+  const [documents, setDocuments]             = useState([]);
+  const [docsLoaded, setDocsLoaded]           = useState(false);
+  const [sessionsLoaded, setSessionsLoaded]   = useState(false);
 
-  const [documents, setDocuments] = useState(() => {
-    const saved = localStorage.getItem('documents');
-    return saved ? JSON.parse(saved) : [];
-  });
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SESSIONS — load from MongoDB
+  // ═══════════════════════════════════════════════════════════════════════════
 
-  // ================= LOCAL STORAGE =================
+  /**
+   * Load all chat sessions for the current user from MongoDB Atlas.
+   * Groups individual chat Q&A pairs by sessionId into session objects.
+   */
+  const loadSessions = useCallback(async () => {
+    if (sessionsLoaded) return;
+    try {
+      const result = await fetchChatHistory(1, 200); // load up to 200 recent messages
+      const chats  = result.data || [];
 
-  useEffect(() => {
-    localStorage.setItem('chat_sessions', JSON.stringify(sessions));
-  }, [sessions]);
+      // Group by sessionId
+      const sessionMap = new Map();
+      chats.forEach((chat) => {
+        const sid = chat.sessionId;
+        if (!sessionMap.has(sid)) {
+          sessionMap.set(sid, {
+            sessionId: sid,
+            title: chat.question.substring(0, 40) + (chat.question.length > 40 ? '...' : ''),
+            messages: [],
+            createdAt: chat.createdAt,
+          });
+        }
+        const session = sessionMap.get(sid);
+        // Reconstruct messages from Q&A pairs
+        session.messages.push({
+          id: chat._id + '_q',
+          sender: 'user',
+          text: chat.question,
+          timestamp: chat.createdAt,
+        });
+        session.messages.push({
+          id: chat._id + '_a',
+          sender: 'ai',
+          text: chat.answer,
+          timestamp: chat.createdAt,
+        });
+      });
 
-  useEffect(() => {
-    if (currentSessionId) {
-      localStorage.setItem('last_session_id', currentSessionId);
+      const sorted = Array.from(sessionMap.values()).sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+
+      setSessions(sorted);
+      setSessionsLoaded(true);
+    } catch (err) {
+      console.error('Failed to load chat sessions:', err.message);
     }
-  }, [currentSessionId]);
+  }, [sessionsLoaded]);
 
-  useEffect(() => {
-    localStorage.setItem('documents', JSON.stringify(documents));
-  }, [documents]);
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CHAT OPERATIONS
+  // ═══════════════════════════════════════════════════════════════════════════
 
-  // ================= CHAT =================
-
-  const createNewChat = () => {
+  const createNewChat = useCallback(() => {
     const newSessionId = uuidv4();
     const newSession = {
       sessionId: newSessionId,
       title: 'New Chat',
       messages: [],
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
-    setSessions(prev => [newSession, ...prev]);
+    setSessions((prev) => [newSession, ...prev]);
     setCurrentSessionId(newSessionId);
     return newSessionId;
-  };
+  }, []);
 
-  const getChatMessages = (sessionId) => {
-    const session = sessions.find(s => s.sessionId === sessionId);
-    return session ? session.messages : [];
-  };
+  const getChatMessages = useCallback(
+    (sessionId) => {
+      const session = sessions.find((s) => s.sessionId === sessionId);
+      return session ? session.messages : [];
+    },
+    [sessions]
+  );
 
-  const addMessage = (sessionId, message) => {
-    setSessions(prev =>
-      prev.map(session => {
-        if (session.sessionId === sessionId) {
-          let newTitle = session.title;
+  /**
+   * Add a message to an in-memory session.
+   * The actual persistence happens in chatController.js when sendMessage is called.
+   */
+  const addMessage = useCallback((sessionId, message) => {
+    setSessions((prev) =>
+      prev.map((session) => {
+        if (session.sessionId !== sessionId) return session;
 
-          if (session.messages.length === 0 && message.sender === 'user') {
-            newTitle =
-              message.text.substring(0, 30) +
-              (message.text.length > 30 ? '...' : '');
-          }
+        const newTitle =
+          session.messages.length === 0 && message.sender === 'user'
+            ? message.text.substring(0, 40) + (message.text.length > 40 ? '...' : '')
+            : session.title;
 
-          return {
-            ...session,
-            title: newTitle,
-            messages: [...session.messages, message]
-          };
-        }
-        return session;
+        return {
+          ...session,
+          title: newTitle,
+          messages: [...session.messages, message],
+        };
       })
     );
-  };
+  }, []);
 
-  const deleteSession = (sessionId) => {
-    setSessions(prev => prev.filter(s => s.sessionId !== sessionId));
-    if (currentSessionId === sessionId) {
-      setCurrentSessionId(null);
-    }
-  };
+  const deleteSession = useCallback((sessionId) => {
+    setSessions((prev) => prev.filter((s) => s.sessionId !== sessionId));
+    if (currentSessionId === sessionId) setCurrentSessionId(null);
+  }, [currentSessionId]);
 
-  // ================= DOCUMENT UPLOAD =================
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DOCUMENTS — load from MongoDB
+  // ═══════════════════════════════════════════════════════════════════════════
 
-  const uploadDocument = async (file) => {
+  /**
+   * Load all uploaded documents for the current user from MongoDB Atlas.
+   */
+  const loadDocuments = useCallback(async () => {
+    if (docsLoaded) return;
     try {
-      const tempId = uuidv4();
+      const result = await fetchUploadHistory(1, 100);
+      const docs   = (result.data || []).map((d) => ({
+        id:         d._id,
+        uploadId:   d._id,
+        name:       d.originalName,
+        size:       formatFileSize(d.fileSize),
+        status:     d.status === 'completed' ? 'Processed ✅' : d.status === 'failed' ? 'Failed ❌' : d.status,
+        uploadedAt: d.createdAt,
+      }));
+      setDocuments(docs);
+      setDocsLoaded(true);
+    } catch (err) {
+      console.error('Failed to load documents:', err.message);
+    }
+  }, [docsLoaded]);
 
-      const tempDoc = {
-        id: tempId,
-        name: file.name,
-        size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
-        status: 'Uploading...',
-        uploadedAt: new Date().toISOString()
-      };
+  /**
+   * Upload a PDF — sends to backend which ingests into n8n → Drive → Qdrant → MongoDB.
+   * On success, adds the returned document record to in-memory state.
+   */
+  const uploadDocument = useCallback(async (file) => {
+    const tempId = uuidv4();
 
-      setDocuments(prev => [tempDoc, ...prev]);
+    // Optimistic UI — show uploading state immediately
+    const tempDoc = {
+      id:         tempId,
+      uploadId:   null,
+      name:       file.name,
+      size:       formatFileSize(file.size),
+      status:     'Uploading...',
+      uploadedAt: new Date().toISOString(),
+    };
+    setDocuments((prev) => [tempDoc, ...prev]);
 
-      await uploadFile(file);
+    try {
+      const response = await uploadFileApi(file);
+      const data     = response.data; // { uploadId, filename, status, driveFileId }
 
-      setDocuments(prev =>
-        prev.map(doc =>
+      setDocuments((prev) =>
+        prev.map((doc) =>
           doc.id === tempId
-            ? { ...doc, status: 'Processed ✅' }
+            ? {
+                ...doc,
+                id:       data.uploadId,
+                uploadId: data.uploadId,
+                name:     data.filename || file.name,
+                status:   'Processed ✅',
+              }
             : doc
         )
       );
-
     } catch (error) {
-      console.error('Upload failed:', error.message);
-
-      setDocuments(prev =>
-        prev.map(doc =>
-          doc.name === file.name
-            ? { ...doc, status: 'Failed ❌' }
-            : doc
+      setDocuments((prev) =>
+        prev.map((doc) =>
+          doc.id === tempId ? { ...doc, status: 'Failed ❌' } : doc
         )
       );
+      throw error; // let caller handle toast
     }
-  };
+  }, []);
 
-  // ================= DELETE DOCUMENT =================
+  /**
+   * Delete a document — removes from Drive, Qdrant, and MongoDB.
+   */
+  const deleteDocument = useCallback(async (docId) => {
+    // Optimistic removal
+    setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
 
-  const deleteDocument = async (docId) => {
-    // Optimistically remove from UI
-    setDocuments(prev => prev.filter(doc => doc.id !== docId));
-
-    // If it has a real MongoDB uploadId, delete from backend (Drive + Qdrant + DB)
-    const doc = documents.find(d => d.id === docId);
-    const uploadId = doc?.uploadId;
-
-    if (uploadId) {
-      try {
-        await deleteDocumentApi(uploadId);
-        toast.success('Document deleted from Drive and database');
-      } catch (error) {
-        console.error('Backend delete failed:', error.message);
-        toast.error('Deleted from UI but failed to remove from Drive: ' + error.message);
-      }
+    try {
+      await deleteDocumentApi(docId);
+      toast.success('Document deleted successfully');
+    } catch (error) {
+      console.error('Delete failed:', error.message);
+      toast.error('Failed to delete document: ' + error.message);
+      // Reload to restore accurate state
+      setDocsLoaded(false);
     }
-  };
+  }, []);
 
-  // ================= CLEAR DOCUMENTS =================
+  /**
+   * Force-refresh documents from MongoDB (e.g. after an error)
+   */
+  const refreshDocuments = useCallback(() => {
+    setDocsLoaded(false);
+  }, []);
 
-  const clearDocuments = () => {
-    setDocuments([]);
-    localStorage.removeItem('documents');
-  };
+  /**
+   * Force-refresh sessions from MongoDB
+   */
+  const refreshSessions = useCallback(() => {
+    setSessionsLoaded(false);
+  }, []);
 
-  // ================= RESET APP =================
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HELPERS
+  // ═══════════════════════════════════════════════════════════════════════════
 
-  const resetApp = () => {
-    localStorage.clear();
-    setDocuments([]);
-    setSessions([]);
-    setCurrentSessionId(null);
+  const formatFileSize = (bytes) => {
+    if (!bytes) return '—';
+    if (bytes < 1024)       return bytes + ' B';
+    if (bytes < 1048576)    return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(2) + ' MB';
   };
 
   return (
     <ChatContext.Provider
       value={{
+        // Sessions
         sessions,
         currentSessionId,
         setCurrentSessionId,
@@ -175,11 +256,15 @@ export const ChatProvider = ({ children }) => {
         getChatMessages,
         addMessage,
         deleteSession,
+        loadSessions,
+        refreshSessions,
+
+        // Documents
         documents,
         uploadDocument,
-        deleteDocument,   // ✅ added
-        clearDocuments,   // ✅ added
-        resetApp          // ✅ added
+        deleteDocument,
+        loadDocuments,
+        refreshDocuments,
       }}
     >
       {children}
@@ -189,8 +274,6 @@ export const ChatProvider = ({ children }) => {
 
 export const useChat = () => {
   const context = useContext(ChatContext);
-  if (!context) {
-    throw new Error('useChat must be used within a ChatProvider');
-  }
+  if (!context) throw new Error('useChat must be used within a ChatProvider');
   return context;
 };
