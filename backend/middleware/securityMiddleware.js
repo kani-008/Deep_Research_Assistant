@@ -12,7 +12,7 @@ const securityHeaders = helmet();
  * Configure CORS for restricted domain access
  */
 const corsMiddleware = cors({
-  origin: process.env.CLIENT_ORIGIN || '*', // Restricted to frontend URL in production
+  origin: process.env.CLIENT_ORIGIN || ['http://localhost:5173', 'http://127.0.0.1:5173'], // Restricted to frontend URL in production
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true,
